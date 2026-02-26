@@ -37,6 +37,7 @@ let project = Project(
             settings: .settings(
                 base: [
                     "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+                    "CODE_SIGN_ENTITLEMENTS": "Apps/PathBridgeApp/PathBridgeApp.entitlements",
                 ]
             )
         ),
@@ -51,6 +52,9 @@ let project = Project(
                 "CFBundleShortVersionString": "0.1.0",
                 "CFBundleVersion": "1",
                 "NSExtension": [
+                    "NSExtensionAttributes": [
+                        "UIDisplayName": "PathBridge Finder Extension",
+                    ],
                     "NSExtensionPointIdentifier": "com.apple.FinderSync",
                     "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).FinderSync",
                 ],
@@ -60,7 +64,12 @@ let project = Project(
             dependencies: [
                 .target(name: "PathBridgeCore"),
                 .target(name: "PathBridgeShared"),
-            ]
+            ],
+            settings: .settings(
+                base: [
+                    "CODE_SIGN_ENTITLEMENTS": "Extensions/PathBridgeFinderExtension/PathBridgeFinderExtension.entitlements",
+                ]
+            )
         ),
         .target(
             name: "PathBridgeCore",
