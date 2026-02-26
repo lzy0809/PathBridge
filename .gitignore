@@ -1,0 +1,10 @@
+.DS_Store
+/build
+/.build
+DerivedData
+*.xcworkspace
+*.xcodeproj
+/.tuist-bin
+/Tuist/.build
+
+/Derived
