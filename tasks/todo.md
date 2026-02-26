@@ -24,7 +24,8 @@
 - [x] 初始化 Tuist 工程骨架（App + Finder Extension + Core + Shared + TerminalAdapters）。
 - [x] 安装 Tuist 并生成本地工程（`tuist install && tuist generate`）。
 - [x] 实现最小可用链路：工具栏菜单点击 -> 打开系统 Terminal。
-- [ ] 打通 Finder Extension 到 Host App 的请求通道（先本地进程内，再升级 App Group/XPC）。
+- [x] 打通 Finder Extension 到 Host App 的请求通道（已实现 DistributedNotification 通道）。
+- [ ] 升级请求通道到 App Group/XPC（替换临时 DistributedNotification 方案）。
 - [ ] 进行 Finder 真机联调：启用扩展后验证工具栏菜单可直接打开 Terminal（需要人工点击验证）。
 
 ## 回顾
@@ -35,5 +36,6 @@
 - 已完成：已新增发布门禁检查清单，发布动作可按门禁顺序执行。
 - 已完成：仓库已独立初始化并绑定 Gitee 远程，开发骨架已落地。
 - 已完成：本地可生成工程并通过 `xcodebuild` 构建，最小链路代码已接入。
+- 已完成：扩展到主应用请求通道已打通（DistributedNotification + 直开兜底）。
 - 风险：Finder 扩展与终端自动化在不同 macOS 版本存在兼容性差异，需要尽早做真机矩阵验证。
 - 下一步：做 Finder 真机联调，确认工具栏点击行为与权限引导流程。

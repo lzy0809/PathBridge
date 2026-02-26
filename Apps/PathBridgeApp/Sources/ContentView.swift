@@ -6,7 +6,7 @@ struct ContentView: View {
             Text("PathBridge")
                 .font(.title2)
                 .fontWeight(.semibold)
-            Text("工程骨架已初始化，可开始实现 Finder 工具栏与终端适配链路。")
+            Text("Finder 扩展已可触发打开 Terminal。当前已接入扩展到主应用的请求通道（分布式通知），并保留直开兜底。")
                 .font(.body)
                 .foregroundStyle(.secondary)
         }

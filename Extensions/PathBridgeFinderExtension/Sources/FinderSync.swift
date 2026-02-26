@@ -2,6 +2,7 @@ import AppKit
 import FinderSync
 import OSLog
 import PathBridgeCore
+import PathBridgeShared
 
 final class FinderSync: FIFinderSync {
     private let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge", category: "finder-extension")
@@ -48,11 +49,35 @@ final class FinderSync: FIFinderSync {
             return
         }
 
+        let normalized = SelectionResolver.normalize(urls)
+        let request = OpenRequest(
+            paths: normalized.map(\.path),
+            terminalID: "system-terminal",
+            mode: .newWindow,
+            commandTemplate: nil
+        )
+
+        let hostBundleID = "com.liangzhiyuan.pathbridge"
+        let hostRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: hostBundleID).isEmpty
+
+        if hostRunning {
+            do {
+                try OpenRequestChannel.post(request)
+                logger.info("Dispatched open request to host app with \(request.paths.count) path(s)")
+                return
+            } catch {
+                logger.error("Failed to dispatch request to host app: \(error.localizedDescription, privacy: .public)")
+            }
+        } else {
+            logger.info("Host app not running, using direct terminal open fallback")
+        }
+
         do {
             try TerminalLauncher.openInSystemTerminal(urls: urls)
+            logger.info("Fallback open in Terminal succeeded")
         } catch {
             NSSound.beep()
-            logger.error("Failed to open Terminal: \(error.localizedDescription, privacy: .public)")
+            logger.error("Fallback open in Terminal failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
