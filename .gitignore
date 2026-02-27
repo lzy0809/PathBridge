@@ -1,10 +1,27 @@
+# macOS
 .DS_Store
-/build
+
+# SwiftPM / Tuist
 /.build
-DerivedData
-*.xcworkspace
-*.xcodeproj
+/build
 /.tuist-bin
 /Tuist/.build
 
+# Local build outputs
 /Derived
+/DerivedData
+/Derived.bak-*/
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+
+# Local backup copies (keep real project/workspace tracked)
+/PathBridge.xcodeproj/
+/PathBridge.xcworkspace/
+/*.xcodeproj.bak-*/
+/*.xcworkspace.bak-*/
+*.entitlements.bak-*
+*.bak
+*.bak-*
+*.orig
