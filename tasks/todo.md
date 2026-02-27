@@ -1,5 +1,11 @@
 # Todo
 
+## 当前任务（2026-02-27，签名与 DMG 打包）
+- [x] 新增本地发布脚本：archive -> app 校验 -> DMG 打包 -> 可选签名/公证。
+- [x] 新增签名与公证说明文档（证书、notary profile、环境变量）。
+- [x] 运行一次“无签名”本地打包验证，确保可产出可安装 DMG。
+- [x] 回答并固化 Finder 一键安装边界说明（是否仍需手动拖拽）。
+
 ## 当前任务（2026-02-27，UI提示与图标迭代）
 - [x] 缩小安装提示区字号，避免挤压主窗口导致底部按钮不可见。
 - [x] 提示文案去路径化，改为固定短文案与状态提示。
@@ -101,6 +107,9 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：新增 `scripts/release/make_dmg.sh`，支持本地一键 archive、DMG 打包、可选签名与公证（`DEVELOPER_ID_APPLICATION` + `NOTARYTOOL_PROFILE`）。
+- 已完成：新增 `docs/signing-and-dmg.md`，覆盖证书、公证 profile、环境变量与验证命令；`README.md` 已补充 DMG 打包入口。
+- 已完成：无签名链路验证通过，成功生成 `build/release/dmg/PathBridge-20260227-145758-401d97b.dmg`。
 - 已完成：安装提示区从大字号改为紧凑可读样式，并移除路径级长文本，避免“感谢支持”按钮被顶出窗口。
 - 已完成：`ExtensionGuideViewModel` 改为固定短文案策略，成功后仅提示“已在 Finder 打开 PathBridgeLauncher”，不再暴露本机绝对路径。
 - 已完成：重绘 PathBridge v2 icon（橙色终端主体 + 桥形符号），并同步替换 App/Launcher 两套图标资源。

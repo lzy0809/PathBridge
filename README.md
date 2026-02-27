@@ -43,3 +43,15 @@ killall Finder
 ```
 
 说明：Finder Sync 扩展需要有效开发者签名；`adhoc` 签名通常不会出现在系统扩展列表中。
+
+## 生成 DMG
+
+快速打包（不签名）：
+
+```bash
+scripts/release/make_dmg.sh
+```
+
+签名、公证、DMG 产物说明见：
+
+- `docs/signing-and-dmg.md`
