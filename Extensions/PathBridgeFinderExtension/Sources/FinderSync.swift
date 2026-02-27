@@ -6,42 +6,46 @@ import PathBridgeShared
 
 final class FinderSync: FIFinderSync {
     private let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge", category: "finder-extension")
+    private let hostBundleID = "com.liangzhiyuan.pathbridge"
+    private let launcherBundleID = "com.liangzhiyuan.pathbridge.launcher"
+    private let defaultTerminalMarker = "default-terminal"
 
     override init() {
         super.init()
-        FIFinderSyncController.default().directoryURLs = [URL(fileURLWithPath: NSHomeDirectory())]
-    }
-
-    override var toolbarItemName: String {
-        "PathBridge"
-    }
-
-    override var toolbarItemToolTip: String {
-        "Open current Finder path in Terminal"
-    }
-
-    override var toolbarItemImage: NSImage {
-        NSImage(systemSymbolName: "terminal", accessibilityDescription: "PathBridge")
-            ?? NSImage(named: NSImage.applicationIconName)
-            ?? NSImage()
+        FIFinderSyncController.default().directoryURLs = [
+            URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true),
+            URL(fileURLWithPath: "/", isDirectory: true),
+        ]
     }
 
     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
-        let menu = NSMenu(title: "PathBridge")
+        switch menuKind {
+        case .toolbarItemMenu:
+            // Go2Shell-style toolbar entry is provided by app icon, not Finder Sync toolbar menu.
+            return nil
+        default:
+            return contextMenu()
+        }
+    }
 
+    private func contextMenu() -> NSMenu {
+        let menu = NSMenu(title: "PathBridge")
         let openItem = NSMenuItem(
-            title: "Open in Terminal",
-            action: #selector(openInPathBridge(_:)),
+            title: "Open in Default Terminal",
+            action: #selector(openDefaultTerminal(_:)),
             keyEquivalent: ""
         )
         openItem.target = self
         menu.addItem(openItem)
-
         return menu
     }
 
     @objc
-    private func openInPathBridge(_ sender: Any?) {
+    private func openDefaultTerminal(_ sender: Any?) {
+        handleOpenRequest(terminalID: defaultTerminalMarker)
+    }
+
+    private func handleOpenRequest(terminalID: String) {
         let urls = selectedOrTargetedURLs()
         guard !urls.isEmpty else {
             NSSound.beep()
@@ -52,33 +56,84 @@ final class FinderSync: FIFinderSync {
         let normalized = SelectionResolver.normalize(urls)
         let request = OpenRequest(
             paths: normalized.map(\.path),
-            terminalID: "system-terminal",
-            mode: .newWindow,
+            terminalID: terminalID,
+            mode: .reuseCurrent,
             commandTemplate: nil
         )
+        logger.info(
+            "request prepared requestID=\(request.requestID, privacy: .public) terminal=\(request.terminalID, privacy: .public) mode=\(request.mode.rawValue, privacy: .public) pathCount=\(request.paths.count)"
+        )
 
-        let hostBundleID = "com.liangzhiyuan.pathbridge"
-        let hostRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: hostBundleID).isEmpty
-
-        if hostRunning {
+        if ensureHostIsRunning() {
             do {
                 try OpenRequestChannel.post(request)
-                logger.info("Dispatched open request to host app with \(request.paths.count) path(s)")
+                logger.info("request dispatched to host requestID=\(request.requestID, privacy: .public)")
                 return
             } catch {
-                logger.error("Failed to dispatch request to host app: \(error.localizedDescription, privacy: .public)")
+                logger.error("request dispatch failed requestID=\(request.requestID, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
             }
         } else {
-            logger.info("Host app not running, using direct terminal open fallback")
+            logger.info("host not running requestID=\(request.requestID, privacy: .public), using fallback")
         }
 
-        do {
-            try TerminalLauncher.openInSystemTerminal(urls: urls)
-            logger.info("Fallback open in Terminal succeeded")
-        } catch {
-            NSSound.beep()
-            logger.error("Fallback open in Terminal failed: \(error.localizedDescription, privacy: .public)")
+        if openWithLauncher(urls: normalized) {
+            logger.info("fallback launcher dispatched requestID=\(request.requestID, privacy: .public) pathCount=\(normalized.count)")
+            return
         }
+
+        NSSound.beep()
+        UserToastNotifier.show(title: "PathBridge 暂不支持", body: "未能打开所选终端，请先确认 PathBridgeLauncher 可用")
+        logger.error("fallback launcher unavailable requestID=\(request.requestID, privacy: .public)")
+    }
+
+    private func ensureHostIsRunning() -> Bool {
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: hostBundleID).isEmpty {
+            return true
+        }
+
+        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: hostBundleID) else {
+            return false
+        }
+        NSWorkspace.shared.open(appURL)
+
+        for _ in 0 ..< 10 {
+            if !NSRunningApplication.runningApplications(withBundleIdentifier: hostBundleID).isEmpty {
+                return true
+            }
+            usleep(50_000)
+        }
+
+        return false
+    }
+
+    private func openWithLauncher(urls: [URL]) -> Bool {
+        guard let launcherURL = resolveLauncherAppURL() else {
+            logger.error("launcher resolve failed")
+            return false
+        }
+        logger.info("launcher resolved path=\(launcherURL.path, privacy: .public)")
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+
+        NSWorkspace.shared.open(urls, withApplicationAt: launcherURL, configuration: configuration) { _, _ in }
+        return true
+    }
+
+    private func resolveLauncherAppURL() -> URL? {
+        // Prefer launcher built next to current app bundle to avoid stale DerivedData bundles.
+        let bundledLauncherURL = Bundle.main.bundleURL
+            .deletingLastPathComponent() // PlugIns
+            .deletingLastPathComponent() // Contents
+            .deletingLastPathComponent() // PathBridgeApp.app
+            .deletingLastPathComponent() // Build/Products/Debug
+            .appendingPathComponent("PathBridgeLauncher.app", isDirectory: true)
+
+        if FileManager.default.fileExists(atPath: bundledLauncherURL.path) {
+            return bundledLauncherURL
+        }
+
+        return NSWorkspace.shared.urlForApplication(withBundleIdentifier: launcherBundleID)
     }
 
     private func selectedOrTargetedURLs() -> [URL] {
@@ -92,4 +147,5 @@ final class FinderSync: FIFinderSync {
         }
         return []
     }
+
 }

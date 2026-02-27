@@ -42,6 +42,32 @@ let project = Project(
             )
         ),
         .target(
+            name: "PathBridgeLauncher",
+            destinations: .macOS,
+            product: .app,
+            bundleId: "\(organization).pathbridge.launcher",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "PathBridge Launcher",
+                "CFBundleShortVersionString": "0.1.0",
+                "CFBundleVersion": "1",
+                "LSUIElement": true,
+                "NSAppleEventsUsageDescription": "PathBridge Launcher needs access to Finder to read current directory and open terminal.",
+            ]),
+            sources: ["Apps/PathBridgeLauncher/Sources/**"],
+            resources: ["Apps/PathBridgeLauncher/Resources/**"],
+            dependencies: [
+                .target(name: "PathBridgeCore"),
+                .target(name: "PathBridgeShared"),
+                .target(name: "PathBridgeTerminalAdapters"),
+            ],
+            settings: .settings(
+                base: [
+                    "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+                ]
+            )
+        ),
+        .target(
             name: "PathBridgeFinderExtension",
             destinations: .macOS,
             product: .appExtension,
@@ -100,6 +126,58 @@ let project = Project(
             dependencies: [
                 .target(name: "PathBridgeCore"),
                 .target(name: "PathBridgeShared"),
+            ]
+        ),
+        .target(
+            name: "PathBridgeSharedTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "\(organization).pathbridge.shared.tests",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .default,
+            sources: ["Packages/Shared/Tests/**"],
+            dependencies: [
+                .target(name: "PathBridgeShared"),
+            ]
+        ),
+        .target(
+            name: "PathBridgeCoreTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "\(organization).pathbridge.core.tests",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .default,
+            sources: ["Packages/Core/Tests/**"],
+            dependencies: [
+                .target(name: "PathBridgeCore"),
+            ]
+        ),
+        .target(
+            name: "PathBridgeTerminalAdaptersTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "\(organization).pathbridge.adapters.tests",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .default,
+            sources: ["Packages/TerminalAdapters/Tests/**"],
+            dependencies: [
+                .target(name: "PathBridgeTerminalAdapters"),
+                .target(name: "PathBridgeShared"),
+            ]
+        ),
+        .target(
+            name: "PathBridgeAppTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "\(organization).pathbridge.app.tests",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .default,
+            sources: ["Apps/PathBridgeApp/Tests/**"],
+            dependencies: [
+                .target(name: "PathBridgeApp"),
+                .target(name: "PathBridgeShared"),
+                .target(name: "PathBridgeTerminalAdapters"),
+                .target(name: "PathBridgeCore"),
             ]
         ),
     ]

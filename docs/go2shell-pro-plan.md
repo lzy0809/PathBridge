@@ -24,14 +24,16 @@
 
 ## 3. 产品能力设计（Phase 1）
 核心场景：
-- Finder 工具栏/右键/扩展动作：`Open in <Terminal>`（工具栏优先）。
+- Finder 右键主入口：`Open in <Default Terminal>`（单击直开）。
+- Finder 工具栏保留最小菜单：首项 `Quick Open in <Default Terminal>`（因 Finder Sync 平台限制，工具栏点击无法完全无菜单直开）。
 - 支持文件夹、文件（自动取父目录）、多选（批量开标签页或多窗口）。
 
 高级能力：
-- 终端适配器：Terminal、iTerm2、Warp、WezTerm、Ghostty、Kaku（按可用性自动降级）。
+- 终端适配器：Phase 1 冻结 Terminal、iTerm2、Warp；WezTerm、Ghostty、Kaku 后续迭代接入。
 - 动作模板：新窗口、新标签、在当前窗口打开、执行启动命令（如 `source .env && npm run dev`）。
 - 路径处理：空格转义、符号链接解析、网络卷与权限失败提示。
-- 偏好设置：默认终端、快捷动作、是否复用窗口、启动后焦点策略。
+- 偏好设置：默认终端、默认参数模板（含默认值）、是否复用窗口、启动后焦点策略、Finder 扩展启用引导。
+- 支持区：展示两张本地“感谢支持”二维码。
 
 非目标（Phase 1 不做）：云同步、插件市场、复杂脚本编排 UI。
 
@@ -350,6 +352,6 @@ brew untap YOUR_ORG/go2shell-pro
 
 ## 8. 实施顺序（建议）
 1. 先冻结 `终端兼容矩阵` 与 `Finder 入口优先级`。
-2. 按 `交互规格` 搭建最小可用流程（工具栏菜单 + 默认动作）。
+2. 按 `交互规格` 搭建最小可用流程（右键单击直开 + 工具栏最小菜单）。
 3. 按 `技术设计` 落地 Adapter 分层与失败回退。
 4. 在联调与自测通过后，执行签名、公证、DMG 流水线和发布前 Gatekeeper 验证。

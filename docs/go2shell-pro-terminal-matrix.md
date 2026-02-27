@@ -46,10 +46,10 @@ func isInstalled() -> Bool {
 - macOS 自带 Terminal 始终返回 `isInstalled() == true`
 - 若用户卸载所有第三方终端，菜单仍至少显示 Terminal
 
-## 3. 说明
+## 3. 说明（范围冻结）
 
-- **P0**：v0.1.0 必须实机通过（Terminal、iTerm2、Warp）
-- **P1**：v0.1.0 尽量支持，至少保证回退可用（Kaku、WezTerm、Ghostty）
+- **P0**：v0.1.0 首发范围，仅交付并实机通过 Terminal、iTerm2、Warp。
+- **P1**：Kaku、WezTerm、Ghostty 在后续版本分批补齐；在 v0.1 规划中保留设计，不作为发布阻塞项。
 - 第三方终端可能存在多发行渠道（Stable/Nightly）导致 Bundle ID 不同，检测逻辑需支持：
   - 主 Bundle ID 列表匹配；
   - 按应用名兜底（`open -a "<AppName>"`）；
