@@ -17,17 +17,21 @@ final class SettingsViewModel: ObservableObject {
     @Published var commandTemplate: String
     @Published var activateAfterOpen: Bool
     @Published var debugMode: Bool
+    @Published var appLanguage: AppLanguage
 
     private let settingsStore: AppSettingsStore
     private let registry: TerminalAdapterRegistry
+    private let userDefaults: UserDefaults
 
     init(
         settingsStore: AppSettingsStore = AppSettingsStore(),
         registry: TerminalAdapterRegistry = .shared,
+        userDefaults: UserDefaults = .standard,
         terminalOptions: [TerminalOption]? = nil
     ) {
         self.settingsStore = settingsStore
         self.registry = registry
+        self.userDefaults = userDefaults
 
         let loaded = settingsStore.load()
         let detected = terminalOptions ?? Self.detectTerminalOptions(using: registry)
@@ -43,6 +47,7 @@ final class SettingsViewModel: ObservableObject {
         self.commandTemplate = loaded.defaultCommandTemplate
         self.activateAfterOpen = loaded.activateAfterOpen
         self.debugMode = loaded.debugMode
+        self.appLanguage = Self.loadLanguage(from: userDefaults)
     }
 
     func save() {
@@ -52,6 +57,10 @@ final class SettingsViewModel: ObservableObject {
     func restoreDefaultCommandTemplate() {
         commandTemplate = AppSettings.defaultCommandTemplate
         save()
+    }
+
+    func saveLanguage() {
+        userDefaults.set(appLanguage.rawValue, forKey: AppLanguage.storageKey)
     }
 
     func terminalDisplayName(for id: String) -> String {
@@ -82,5 +91,13 @@ final class SettingsViewModel: ObservableObject {
         }
 
         return options
+    }
+
+    private static func loadLanguage(from userDefaults: UserDefaults) -> AppLanguage {
+        if let stored = userDefaults.string(forKey: AppLanguage.storageKey),
+           let language = AppLanguage(rawValue: stored) {
+            return language
+        }
+        return .zhHans
     }
 }
