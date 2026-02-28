@@ -65,8 +65,8 @@ scripts/release/make_dmg.sh
 未来安装命令：
 
 ```bash
-brew tap lzy0809/homebrew-tap
-brew install --cask pathbridge
+brew tap lzy0809/tap
+brew install --cask lzy0809/tap/pathbridge
 ```
 
 ## 开源发布自动化

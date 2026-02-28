@@ -38,8 +38,8 @@ end
 ## 3. 用户安装方式
 
 ```bash
-brew tap lzy0809/homebrew-tap
-brew install --cask pathbridge
+brew tap lzy0809/tap
+brew install --cask lzy0809/tap/pathbridge
 ```
 
 ## 4. 升级发布
@@ -54,5 +54,5 @@ brew install --cask pathbridge
 
 ```bash
 brew update
-brew upgrade --cask pathbridge
+brew upgrade --cask lzy0809/tap/pathbridge
 ```
