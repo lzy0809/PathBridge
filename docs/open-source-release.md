@@ -5,7 +5,7 @@
 ## 1. 目标仓库
 
 - 源码仓库：`https://github.com/lzy0809/PathBridge`
-- Homebrew tap：`https://github.com/lzy9527/homebrew-tap`
+- Homebrew tap：`https://github.com/lzy0809/homebrew-tap`
 
 ## 2. 一次性准备
 
@@ -37,7 +37,7 @@ scripts/release/publish_open_source.sh \
 - 创建/校验 `lzy0809/PathBridge`
 - 推送当前分支到 GitHub
 - 创建/更新 Release（上传 DMG + SHA256）
-- 创建/校验 `lzy9527/homebrew-tap`
+- 创建/校验 `lzy0809/homebrew-tap`
 - 生成并推送 `Casks/pathbridge.rb`
 
 ## 4. 手动方式（备用）

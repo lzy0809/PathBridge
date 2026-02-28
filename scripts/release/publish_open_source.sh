@@ -7,7 +7,7 @@ set -euo pipefail
 # 3) Homebrew tap repo + cask publish
 
 SOURCE_REPO="${SOURCE_REPO:-lzy0809/PathBridge}"
-TAP_REPO="${TAP_REPO:-lzy9527/homebrew-tap}"
+TAP_REPO="${TAP_REPO:-lzy0809/homebrew-tap}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
 REMOTE_PROTOCOL="${REMOTE_PROTOCOL:-https}"
 

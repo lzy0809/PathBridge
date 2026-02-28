@@ -1,11 +1,11 @@
 # Homebrew Cask 发布说明
 
-目标 tap 仓库：`lzy9527/homebrew-tap`
+目标 tap 仓库：`lzy0809/homebrew-tap`
 
 ## 1. 创建 tap 仓库
 
 ```bash
-gh repo create lzy9527/homebrew-tap --public
+gh repo create lzy0809/homebrew-tap --public
 ```
 
 ## 2. cask 文件结构
@@ -38,7 +38,7 @@ end
 ## 3. 用户安装方式
 
 ```bash
-brew tap lzy9527/homebrew-tap
+brew tap lzy0809/homebrew-tap
 brew install --cask pathbridge
 ```
 
@@ -50,7 +50,7 @@ brew install --cask pathbridge
 - `sha256`
 - `url`
 
-提交并推送到 `lzy9527/homebrew-tap` 后，用户执行：
+提交并推送到 `lzy0809/homebrew-tap` 后，用户执行：
 
 ```bash
 brew update

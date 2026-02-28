@@ -5,7 +5,7 @@
 - [x] 收敛 Xcode scheme，仅保留对外开发必需方案，避免 target 级 scheme 噪音。
 - [x] 设计并替换完全自有 icon（App + Launcher 统一），去除对第三方视觉资产依赖。
 - [x] 完成 GitHub 开源发布准备（README/发布说明/许可证/安全检查），并评估自动化发布路径。
-- [x] 规划并落地 Homebrew Cask/tap 方案（tap 仓库名：`lzy9527/homebrew-tap`）。
+- [x] 规划并落地 Homebrew Cask/tap 方案（tap 仓库名：`lzy0809/homebrew-tap`）。
 
 ## 当前任务（2026-02-28，Go2Shell 100% 对标重构规划）
 - [x] 基于本机 `/Applications/Go2Shell.app` 做结构取证（主 App + 内嵌 LSUIElement Helper）。
@@ -169,8 +169,8 @@
 - 已完成：2026-02-28 开源发布与维护性收敛。移除未使用模块（`TerminalLauncher`、`OpenRequestChannel`）与过时设置字段，相关测试已同步更新并通过。
 - 已完成：Scheme 收敛到 `PathBridgeApp` / `PathBridgeLauncher` 两个共享方案；Workspace 侧自动方案在 Tuist 中默认保留但已本机隐藏，开发入口不再混乱。
 - 已完成：图标生成脚本改为纯自绘自有风格（不依赖第三方素材），并同步覆盖 App/Launcher 两套 `AppIcon`。
-- 已完成：新增 `scripts/release/publish_open_source.sh`，可一键自动执行 GitHub 源码仓库、Release 与 `lzy9527/homebrew-tap` cask 发布链路（需先 `gh auth login`）。
-- 已完成：Homebrew 文档与 README 已统一为 `brew tap lzy9527/homebrew-tap`。
+- 已完成：新增 `scripts/release/publish_open_source.sh`，可一键自动执行 GitHub 源码仓库、Release 与 `lzy0809/homebrew-tap` cask 发布链路（需先 `gh auth login`）。
+- 已完成：Homebrew 文档与 README 已统一为 `brew tap lzy0809/homebrew-tap`。
 - 已完成：入口行为分流。`reopen` 仅在 Finder 前台时触发快开；Launchpad/Dock 普通启动不再直开终端，改为进入设置界面。
 - 已完成：Finder 快开执行后切为 accessory 并自动退出进程，减少 Dock 常驻与运行指示。
 - 已完成：设置页标题与副标题改为水平居中；产出新无签名包 `build/release/dmg/PathBridge-20260228-093717-82dd1a2.dmg`（SHA256 已生成）。

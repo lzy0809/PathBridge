@@ -82,7 +82,7 @@ spctl --assess --type open --context context:primary-signature -v build/release/
 
 ## 7. 生成 Homebrew Cask 模板
 
-目标 tap：`lzy9527/homebrew-tap`
+目标 tap：`lzy0809/homebrew-tap`
 
 ```bash
 scripts/release/generate_cask.sh \

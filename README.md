@@ -60,12 +60,12 @@ scripts/release/make_dmg.sh
 
 ## Homebrew 安装（规划）
 
-计划通过自定义 tap 分发：`lzy9527/homebrew-tap`
+计划通过自定义 tap 分发：`lzy0809/homebrew-tap`
 
 未来安装命令：
 
 ```bash
-brew tap lzy9527/homebrew-tap
+brew tap lzy0809/homebrew-tap
 brew install --cask pathbridge
 ```
 
