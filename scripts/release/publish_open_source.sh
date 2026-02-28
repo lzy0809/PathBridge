@@ -9,6 +9,7 @@ set -euo pipefail
 SOURCE_REPO="${SOURCE_REPO:-lzy0809/PathBridge}"
 TAP_REPO="${TAP_REPO:-lzy9527/homebrew-tap}"
 DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
+REMOTE_PROTOCOL="${REMOTE_PROTOCOL:-https}"
 
 VERSION=""
 DMG_PATH=""
@@ -55,10 +56,16 @@ if ! gh repo view "$SOURCE_REPO" >/dev/null 2>&1; then
   gh repo create "$SOURCE_REPO" --public
 fi
 
-if git remote get-url origin >/dev/null 2>&1; then
-  git remote set-url origin "git@github.com:${SOURCE_REPO}.git"
+if [[ "$REMOTE_PROTOCOL" == "ssh" ]]; then
+  REMOTE_URL="git@github.com:${SOURCE_REPO}.git"
 else
-  git remote add origin "git@github.com:${SOURCE_REPO}.git"
+  REMOTE_URL="https://github.com/${SOURCE_REPO}.git"
+fi
+
+if git remote get-url origin >/dev/null 2>&1; then
+  git remote set-url origin "$REMOTE_URL"
+else
+  git remote add origin "$REMOTE_URL"
 fi
 
 git push -u origin "$DEFAULT_BRANCH"
