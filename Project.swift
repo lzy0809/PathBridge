@@ -5,6 +5,7 @@ let organization = "com.liangzhiyuan"
 let project = Project(
     name: "PathBridge",
     options: .options(
+        automaticSchemesOptions: .disabled,
         disableBundleAccessors: true,
         disableSynthesizedResourceAccessors: true
     ),
@@ -184,6 +185,35 @@ let project = Project(
                 .target(name: "PathBridgeTerminalAdapters"),
                 .target(name: "PathBridgeCore"),
             ]
+        ),
+    ],
+    schemes: [
+        .scheme(
+            name: "PathBridgeApp",
+            shared: true,
+            buildAction: .buildAction(targets: ["PathBridgeApp"]),
+            testAction: .targets(
+                [
+                    "PathBridgeAppTests",
+                    "PathBridgeSharedTests",
+                    "PathBridgeCoreTests",
+                    "PathBridgeTerminalAdaptersTests",
+                ],
+                configuration: .debug
+            ),
+            runAction: .runAction(configuration: .debug, executable: "PathBridgeApp"),
+            archiveAction: .archiveAction(configuration: .release),
+            profileAction: .profileAction(configuration: .release, executable: "PathBridgeApp"),
+            analyzeAction: .analyzeAction(configuration: .debug)
+        ),
+        .scheme(
+            name: "PathBridgeLauncher",
+            shared: true,
+            buildAction: .buildAction(targets: ["PathBridgeLauncher"]),
+            runAction: .runAction(configuration: .debug, executable: "PathBridgeLauncher"),
+            archiveAction: .archiveAction(configuration: .release),
+            profileAction: .profileAction(configuration: .release, executable: "PathBridgeLauncher"),
+            analyzeAction: .analyzeAction(configuration: .debug)
         ),
     ]
 )

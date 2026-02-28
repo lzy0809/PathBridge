@@ -15,8 +15,6 @@ final class SettingsViewModel: ObservableObject {
     @Published var defaultTerminalID: String
     @Published var defaultOpenMode: OpenMode
     @Published var commandTemplate: String
-    @Published var activateAfterOpen: Bool
-    @Published var debugMode: Bool
     @Published var appLanguage: AppLanguage
 
     private let settingsStore: AppSettingsStore
@@ -45,8 +43,6 @@ final class SettingsViewModel: ObservableObject {
             : fallbackOptions[0].id
         self.defaultOpenMode = loaded.defaultOpenMode
         self.commandTemplate = loaded.defaultCommandTemplate
-        self.activateAfterOpen = loaded.activateAfterOpen
-        self.debugMode = loaded.debugMode
         self.appLanguage = Self.loadLanguage(from: userDefaults)
     }
 
@@ -71,9 +67,7 @@ final class SettingsViewModel: ObservableObject {
         AppSettings(
             defaultTerminalID: defaultTerminalID,
             defaultOpenMode: defaultOpenMode,
-            defaultCommandTemplate: commandTemplate,
-            activateAfterOpen: activateAfterOpen,
-            debugMode: debugMode
+            defaultCommandTemplate: commandTemplate
         )
     }
 

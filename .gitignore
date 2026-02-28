@@ -6,6 +6,7 @@
 /build
 /.tuist-bin
 /Tuist/.build
+/.tools
 
 # Local build outputs
 /Derived

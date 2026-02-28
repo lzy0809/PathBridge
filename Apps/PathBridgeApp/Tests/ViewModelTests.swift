@@ -25,7 +25,6 @@ final class ViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.defaultTerminalID, "system-terminal")
         XCTAssertEqual(viewModel.defaultOpenMode, .newWindow)
         XCTAssertEqual(viewModel.commandTemplate, "cd %PATH_QUOTED%; clear; pwd")
-        XCTAssertTrue(viewModel.activateAfterOpen)
         XCTAssertEqual(viewModel.appLanguage, .zhHans)
     }
 

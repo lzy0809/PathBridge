@@ -21,6 +21,12 @@ scripts/release/make_dmg.sh
 - `build/release/dmg/PathBridge-<timestamp>-<sha>.dmg`
 - `build/release/dmg/PathBridge-<...>.dmg.sha256`
 
+可用下列命令提取校验值（用于 GitHub Release / Homebrew Cask）：
+
+```bash
+shasum -a 256 build/release/dmg/PathBridge-*.dmg
+```
+
 ## 3. 签名 + 打包
 
 ```bash
@@ -72,4 +78,16 @@ scripts/release/make_dmg.sh
 ```bash
 codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app
 spctl --assess --type open --context context:primary-signature -v build/release/dmg/*.dmg
+```
+
+## 7. 生成 Homebrew Cask 模板
+
+目标 tap：`lzy9527/homebrew-tap`
+
+```bash
+scripts/release/generate_cask.sh \
+  --version 0.1.0 \
+  --dmg-name PathBridge-20260228-112227-82dd1a2.dmg \
+  --sha256 <sha256> \
+  --output /path/to/homebrew-tap/Casks/pathbridge.rb
 ```

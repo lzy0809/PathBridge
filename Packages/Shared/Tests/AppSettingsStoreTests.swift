@@ -11,9 +11,7 @@ final class AppSettingsStoreTests: XCTestCase {
         let expected = AppSettings(
             defaultTerminalID: "warp",
             defaultOpenMode: .newTab,
-            defaultCommandTemplate: "cd %PATH_QUOTED%; clear; pwd",
-            activateAfterOpen: true,
-            debugMode: false
+            defaultCommandTemplate: "cd %PATH_QUOTED%; clear; pwd"
         )
         let data = try JSONEncoder().encode(expected)
         let dict: NSDictionary = [
@@ -53,9 +51,7 @@ final class AppSettingsStoreTests: XCTestCase {
         let expected = AppSettings(
             defaultTerminalID: "warp",
             defaultOpenMode: .newTab,
-            defaultCommandTemplate: "cd %PATH_QUOTED%",
-            activateAfterOpen: true,
-            debugMode: false
+            defaultCommandTemplate: "cd %PATH_QUOTED%"
         )
 
         let store = AppSettingsStore(userDefaults: defaults)
@@ -81,8 +77,6 @@ final class AppSettingsStoreTests: XCTestCase {
         XCTAssertEqual(settings.defaultTerminalID, "system-terminal")
         XCTAssertEqual(settings.defaultOpenMode, .newWindow)
         XCTAssertEqual(settings.defaultCommandTemplate, "cd %PATH_QUOTED%; clear; pwd")
-        XCTAssertTrue(settings.activateAfterOpen)
-        XCTAssertFalse(settings.debugMode)
     }
 
     func test_saveAndLoad_roundTripsSettings() {
@@ -93,9 +87,7 @@ final class AppSettingsStoreTests: XCTestCase {
         let expected = AppSettings(
             defaultTerminalID: "iterm2",
             defaultOpenMode: .newTab,
-            defaultCommandTemplate: "cd %PATH_QUOTED%; npm run dev",
-            activateAfterOpen: false,
-            debugMode: true
+            defaultCommandTemplate: "cd %PATH_QUOTED%; npm run dev"
         )
 
         store.save(expected)
