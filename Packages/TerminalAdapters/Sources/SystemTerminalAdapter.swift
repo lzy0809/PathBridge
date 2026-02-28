@@ -5,14 +5,20 @@ public struct SystemTerminalAdapter: TerminalAdapter {
     public let id = "system-terminal"
     public let displayName = "Terminal"
     public let bundleIdentifier: String? = "com.apple.Terminal"
+    private let supportedBundleIDs = [
+        "com.apple.Terminal",
+    ]
+    private let supportedAppNames = [
+        "Terminal",
+    ]
 
     public init() {}
 
     public func isInstalled() -> Bool {
-        true
+        OpenCommandLauncher.isInstalled(bundleIdentifiers: supportedBundleIDs, appNames: supportedAppNames)
     }
 
     public func open(paths: [URL], mode: OpenMode, command: String?) throws {
-        try OpenCommandLauncher.open(appName: "Terminal", paths: paths, mode: mode)
+        try OpenCommandLauncher.open(bundleIdentifiers: supportedBundleIDs, appNames: supportedAppNames, paths: paths, mode: mode)
     }
 }

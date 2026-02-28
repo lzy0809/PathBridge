@@ -10,60 +10,115 @@ public struct KakuAdapter: TerminalAdapter {
     private let supportedBundleIDs = [
         "fun.tw93.kaku",
     ]
+    private let supportedAppNames = [
+        "Kaku",
+    ]
     private static let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge.adapters", category: "kaku-adapter")
 
     public init() {}
 
     public func isInstalled() -> Bool {
-        for candidate in supportedBundleIDs {
-            if NSWorkspace.shared.urlForApplication(withBundleIdentifier: candidate) != nil {
-                return true
-            }
-        }
-        return false
+        OpenCommandLauncher.isInstalled(bundleIdentifiers: supportedBundleIDs, appNames: supportedAppNames)
     }
 
     public func open(paths: [URL], mode: OpenMode, command: String?) throws {
-        guard let cliPath = resolveCLIPath() else {
-            throw AdapterLaunchError.processStartFailed("Kaku CLI not found")
+        guard let executablePaths = resolveExecutablePaths() else {
+            throw AdapterLaunchError.processStartFailed("Kaku executable not found")
         }
 
         for path in paths {
-            let arguments = Self.makeCLIArguments(mode: mode, cwd: path)
-            Self.logger.info("kaku launch path=\(path.path, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public)")
-            try runKaku(cliPath: cliPath, arguments: arguments)
+            let strategies = Self.makeLaunchStrategies(mode: mode, cwd: path)
+            var launched = false
+            var lastError: Error?
+            var attempt = 0
+
+            for executablePath in executablePaths {
+                for arguments in strategies {
+                    attempt += 1
+                    Self.logger.info(
+                        "kaku attempt=\(attempt) exec=\(executablePath, privacy: .public) path=\(path.path, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public)"
+                    )
+                    do {
+                        try runKaku(executablePath: executablePath, arguments: arguments)
+                        Self.logger.info("kaku launched via exec=\(executablePath, privacy: .public)")
+                        launched = true
+                        break
+                    } catch {
+                        lastError = error
+                        Self.logger.error(
+                            "kaku attempt failed exec=\(executablePath, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public) error=\(error.localizedDescription, privacy: .public)"
+                        )
+                    }
+                }
+
+                if launched {
+                    break
+                }
+            }
+
+            guard launched else {
+                throw lastError ?? AdapterLaunchError.processStartFailed("Kaku launch failed")
+            }
         }
     }
 
-    static func makeCLIArguments(mode: OpenMode, cwd: URL) -> [String] {
-        var arguments = ["start"]
-        if mode == .newTab {
-            arguments.append("--new-tab")
+    static func makeLaunchStrategies(mode: OpenMode, cwd: URL) -> [[String]] {
+        let cwdArguments = ["--cwd", cwd.path]
+        switch mode {
+        case .newTab:
+            return [
+                ["cli", "spawn"] + cwdArguments,
+                ["start", "--new-tab"] + cwdArguments,
+                ["start"] + cwdArguments,
+            ]
+        case .newWindow, .reuseCurrent:
+            return [
+                ["start"] + cwdArguments,
+                ["start", "--always-new-process"] + cwdArguments,
+                ["cli", "spawn", "--new-window"] + cwdArguments,
+            ]
         }
-        arguments += ["--cwd", cwd.path]
-        return arguments
     }
 
-    private func resolveCLIPath() -> String? {
+    static func makeExecutableCandidates(forAppURL appURL: URL) -> [String] {
+        [
+            appURL.appendingPathComponent("Contents/MacOS/kaku", isDirectory: false).path,
+            appURL.appendingPathComponent("Contents/MacOS/kaku-gui", isDirectory: false).path,
+        ]
+    }
+
+    private func resolveExecutablePaths() -> [String]? {
+        var candidates: [String] = []
+
         for candidate in supportedBundleIDs {
             guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: candidate) else {
                 continue
             }
-            let cliPath = appURL
-                .appendingPathComponent("Contents/MacOS/kaku", isDirectory: false)
-                .path
-            if FileManager.default.isExecutableFile(atPath: cliPath) {
-                return cliPath
-            }
+            candidates.append(contentsOf: Self.makeExecutableCandidates(forAppURL: appURL))
         }
 
-        let fallbackPath = "/Applications/Kaku.app/Contents/MacOS/kaku"
-        return FileManager.default.isExecutableFile(atPath: fallbackPath) ? fallbackPath : nil
+        let appCandidates = [
+            URL(fileURLWithPath: "/Applications/Kaku.app", isDirectory: true),
+            URL(fileURLWithPath: "/Applications/Setapp/Kaku.app", isDirectory: true),
+            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications/Kaku.app", isDirectory: true),
+        ]
+        for appURL in appCandidates {
+            candidates.append(contentsOf: Self.makeExecutableCandidates(forAppURL: appURL))
+        }
+
+        var seen = Set<String>()
+        var executablePaths: [String] = []
+        for path in candidates where FileManager.default.isExecutableFile(atPath: path) {
+            if seen.insert(path).inserted {
+                executablePaths.append(path)
+            }
+        }
+        return executablePaths.isEmpty ? nil : executablePaths
     }
 
-    private func runKaku(cliPath: String, arguments: [String]) throws {
+    private func runKaku(executablePath: String, arguments: [String]) throws {
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: cliPath)
+        process.executableURL = URL(fileURLWithPath: executablePath)
         process.arguments = arguments
 
         let stderrPipe = Pipe()
@@ -74,7 +129,7 @@ public struct KakuAdapter: TerminalAdapter {
         do {
             try process.run()
         } catch {
-            Self.logger.error("kaku run failed error=\(error.localizedDescription, privacy: .public)")
+            Self.logger.error("kaku run failed exec=\(executablePath, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
             throw AdapterLaunchError.processStartFailed(error.localizedDescription)
         }
 
@@ -114,7 +169,9 @@ public struct KakuAdapter: TerminalAdapter {
         }
         let normalized = output.lowercased()
         return normalized.contains("failed to connect")
+            || normalized.contains("failed to connect to socket")
             || normalized.contains("terminating")
             || normalized.contains("no such file or directory")
+            || normalized.contains("unable to determine cwd")
     }
 }

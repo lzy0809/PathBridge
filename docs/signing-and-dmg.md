@@ -17,7 +17,7 @@ scripts/release/make_dmg.sh
 
 产物目录：
 
-- `build/release/app/PathBridge.app`
+- `build/release/app/PathBridgeApp.app`
 - `build/release/dmg/PathBridge-<timestamp>-<sha>.dmg`
 - `build/release/dmg/PathBridge-<...>.dmg.sha256`
 
@@ -26,6 +26,18 @@ scripts/release/make_dmg.sh
 ```bash
 DEVELOPER_ID_APPLICATION="Developer ID Application: YOUR_NAME (TEAMID)" \
 scripts/release/make_dmg.sh
+```
+
+## 3.1 自动检测 Team / 证书（推荐先执行）
+
+```bash
+scripts/release/configure_signing.sh
+```
+
+如果你已经确认 Team ID，可自动写入 `Project.swift`：
+
+```bash
+scripts/release/configure_signing.sh --team <TEAM_ID>
 ```
 
 ## 4. 签名 + 公证 + Staple
@@ -58,7 +70,6 @@ scripts/release/make_dmg.sh
 ## 6. 发布前验证
 
 ```bash
-codesign --verify --deep --strict --verbose=2 build/release/app/PathBridge.app
+codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app
 spctl --assess --type open --context context:primary-signature -v build/release/dmg/*.dmg
 ```
-

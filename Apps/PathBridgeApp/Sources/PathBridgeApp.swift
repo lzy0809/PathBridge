@@ -8,7 +8,7 @@ struct PathBridgeApp: App {
         WindowGroup("PathBridge") {
             ContentView()
         }
-        .defaultSize(width: 430, height: 360)
-        .windowResizability(.contentSize)
+        .defaultSize(width: 420, height: 410)
+        .windowResizability(.automatic)
     }
 }

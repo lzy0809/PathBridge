@@ -1,5 +1,57 @@
 # Todo
 
+## 当前任务（2026-02-28，Go2Shell 100% 对标重构规划）
+- [x] 基于本机 `/Applications/Go2Shell.app` 做结构取证（主 App + 内嵌 LSUIElement Helper）。
+- [x] 对比当前 PathBridge 架构差异（当前为 Host App + FinderSync Extension）。
+- [x] 输出“Go2Shell 式激进实现”设计文档并冻结目标行为。
+- [x] 按设计进入实施：恢复双角色（设置 App + 无 Dock Helper）并保证外部分发仍为单 `.app`。
+- [x] 实现激进“一键添加到 Finder”路径（写 Finder toolbar 配置 + 重启 Finder）并保留手动拖拽兜底。
+- [x] 回归验证：Finder 工具栏点击直开终端、不弹菜单、不弹设置窗口、Dock 不常驻。
+- [x] 修复单 App 内嵌 Helper 后的签名封包错误（ad-hoc 重新签名），并生成可安装 DMG：`build/release/dmg/PathBridge-20260228-101100-82dd1a2.dmg`。
+- [x] 修复 Finder 工具栏图标不一致：同步 App/Launcher `AppIcon` 资源并更新图标生成脚本同时覆盖两端。
+- [x] 修复 macOS 26 Kaku 打开失败：适配器改为多执行文件+多策略尝试（`kaku`/`kaku-gui` + `start/cli spawn`）并补充日志与测试。
+- [x] 重新打包验证：`build/release/dmg/PathBridge-20260228-112227-82dd1a2.dmg`（SHA256 已生成）。
+
+## 当前任务（2026-02-27，入口行为分流与无界面快开）
+- [x] 设置页标题与副标题改为水平居中。
+- [x] 普通启动（Launchpad/Dock）仅打开设置界面，不触发快开终端。
+- [x] Finder 工具栏启动走无界面快开终端，执行后自动退出，避免 Dock 常驻与运行指示。
+- [x] 回归验证并重新打包无签名 DMG 供用户复测。
+
+## 当前任务（2026-02-27，Finder 自动化授权拦截修复）
+- [x] 为主 App 补充 `NSAppleEventsUsageDescription`，确保 Finder 自动化可触发系统授权弹窗。
+- [x] 捕获 Finder Apple Events 拒绝（`-1743`）并给出清晰用户引导（通知 + 打开系统设置自动化页）。
+- [x] 回归验证（App 测试 + FinderExtension 构建）并重新生成无签名 DMG 给用户验证。
+
+## 当前任务（2026-02-27，Finder 点击无响应 + 语言入口可见性）
+- [x] 修复单 Bundle 下 Finder 工具栏图标点击无响应（补齐 `reopen` quick-open 打开链路）。
+- [x] 保持 Finder 扩展 deep-link 直达能力，避免回归。
+- [x] 将语言切换入口下移到稳定可见区域，避免顶部裁切导致入口消失。
+- [x] 调整窗口顶部/高度，修复标题与内容被遮挡问题。
+- [x] 运行构建与测试回归，并生成新的无签名 DMG 供实机验证。
+
+## 当前任务（2026-02-27，单 Bundle 架构收敛）
+- [x] 移除 `PathBridgeLauncher` 目标，统一为单可执行 `PathBridgeApp`。
+- [x] Finder 扩展回退链路改为直接唤起 `PathBridgeApp`（不再依赖 Launcher）。
+- [x] 更新安装提示文案与“添加到 Finder”定位逻辑，改为 `PathBridgeApp`。
+- [x] 更新打包脚本与文档，DMG 仅包含 `PathBridgeApp.app`。
+- [x] 运行构建/测试回归并重新生成无签名 DMG。
+
+## 当前任务（2026-02-27，单 Bundle 回归修复）
+- [x] 修复单 Bundle 下 Finder 点击无响应（补齐 App 启动/重开快开逻辑）。
+- [x] 修复设置窗口上下遮挡（调整标题区布局、窗口尺寸与安全区处理）。
+- [x] 回归验证并重新生成可测试 DMG。
+
+## 当前任务（2026-02-27，临时无签名 DMG 验证）
+- [x] 运行无签名打包脚本，生成可安装 `dmg`（含 Launcher）。
+- [x] 输出产物路径与 `sha256`，供特定机型安装验证。
+
+## 当前任务（2026-02-27，Tahoe 适配与轻量图标）
+- [x] 优化主窗口顶部安全区与标题布局，修复 Tahoe 26 可能出现的顶部遮挡。
+- [x] 缩小并轻量化 App/Launcher 图标，降低 Finder 工具栏视觉权重并保持主题统一。
+- [x] 微调支持按钮与语言入口间距，保持紧凑布局下的可读性与对齐。
+- [x] 回归验证 `PathBridgeApp` 测试与 `PathBridgeLauncher` 构建。
+
 ## 当前任务（2026-02-27，签名与 DMG 打包）
 - [x] 新增本地发布脚本：archive -> app 校验 -> DMG 打包 -> 可选签名/公证。
 - [x] 新增签名与公证说明文档（证书、notary profile、环境变量）。
@@ -107,6 +159,37 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：入口行为分流。`reopen` 仅在 Finder 前台时触发快开；Launchpad/Dock 普通启动不再直开终端，改为进入设置界面。
+- 已完成：Finder 快开执行后切为 accessory 并自动退出进程，减少 Dock 常驻与运行指示。
+- 已完成：设置页标题与副标题改为水平居中；产出新无签名包 `build/release/dmg/PathBridge-20260228-093717-82dd1a2.dmg`（SHA256 已生成）。
+- 已完成：修复 Finder 自动化授权拦截。主 App 已补 `NSAppleEventsUsageDescription`，并在 `-1743` 时提示用户授权且自动打开“隐私与安全性 > 自动化”设置页。
+- 已完成：重新 `tuist generate` 同步工程后回归通过，并产出新无签名包 `build/release/dmg/PathBridge-20260227-200058-82dd1a2.dmg`（SHA256 已生成）。
+- 已完成：恢复单 Bundle 下 `reopen` 快开链路，Finder 工具栏图标点击可直接触发默认终端打开；并保留 deep-link 路径用于扩展直达。
+- 已完成：语言切换入口下移到主界面右下，标题区裁切时仍可见；窗口顶部留白与高度同步上调，缓解 Tahoe/26 的遮挡问题。
+- 已完成：回归通过 `xcodebuild test -scheme PathBridgeApp` 与 `xcodebuild build -scheme PathBridgeFinderExtension`，并产出新无签名包 `build/release/dmg/PathBridge-20260227-193843-82dd1a2.dmg`（SHA256 已生成）。
+- 已完成：单 Bundle 回归修复，新增 Finder 前台触发的启动/重开快开逻辑，解决“点击无反应”。
+- 已完成：设置页布局与窗口尺寸调整，缓解 Tahoe/26 上下遮挡问题；新包 `build/release/dmg/PathBridge-20260227-182219-82dd1a2.dmg`。
+- 已完成：架构收敛为单 Bundle（移除 `PathBridgeLauncher`），Finder 扩展在 Host 未运行时直接以 `PathBridgeApp` 打开路径，不再依赖第二个 App。
+- 已完成：打包链路切换为单 App，最新无签名产物 `build/release/dmg/PathBridge-20260227-180426-82dd1a2.dmg`（SHA256: `7eb8aeb7dd4e960d6caf85ad4e721d0a2bf7de80798f8e6f14eb129f64108359`）。
+- 已完成：临时无签名打包成功，产物 `build/release/dmg/PathBridge-20260227-175027-82dd1a2.dmg`（含 `PathBridgeApp.app` + `PathBridgeLauncher.app`），可直接用于目标机型安装验证。
+- 已完成：修复主窗口标题栏遮挡：header 改为稳定横向结构，并在 AppDelegate 中强制关闭 `fullSizeContentView`，避免内容侵入标题栏。
+- 已完成：终端唤起兼容增强：`OpenCommandLauncher` 改为 “bundle id + 常见目录扫描 + app绝对路径启动” 策略，降低 Tahoe 26 下 LaunchServices 差异影响。
+- 已完成：iTerm2/Warp/WezTerm/Ghostty/SystemTerminal/Kaku 的安装检测统一走兼容解析逻辑，支持 `~/Applications`、`/Applications/Setapp` 等路径。
+- 已完成：图标改为 Go2Shell 基础样式二次设计（内部符号调整为 `^_^`），并同步替换 App/Launcher 全尺寸资源。
+- 已完成：修复 Tahoe 26 顶部遮挡：主标题与语言切换改为同一行稳定布局并增加顶部留白。
+- 已完成：`一键添加到 Finder` 缺失提示改为“开发/安装”双场景文案，不再在已安装场景误导用户去运行 Xcode scheme。
+- 已完成：`make_dmg.sh` 默认将 `PathBridgeLauncher.app` 一并打包并签名到 DMG，避免安装后找不到 Launcher。
+- 已完成：新发布包已公证并通过 Gatekeeper：`build/release/dmg/PathBridge-20260227-170211-82dd1a2.dmg`。
+- 已完成：notarytool profile `pathbridge-notary` 已配置并通过凭据校验。
+- 已完成：带签名与公证的 DMG 产物已生成并 stapled：`build/release/dmg/PathBridge-20260227-165051-82dd1a2.dmg`。
+- 已完成：Gatekeeper 验证通过（`spctl`: `source=Notarized Developer ID`）。
+- 已完成：签名配置自动化：新增 `scripts/release/configure_signing.sh`，可检测 Team/证书并一键写入 `DEVELOPMENT_TEAM`。
+- 已完成：`Project.swift` 三个可签名目标（App/Launcher/FinderExtension）已固定 `DEVELOPMENT_TEAM=6K9FQJ7SA2`。
+- 已完成：Developer ID 签名 DMG 已产出：`build/release/dmg/PathBridge-20260227-164404-82dd1a2.dmg`（SHA256 已生成）。
+- 已完成：主窗口改为更紧凑尺寸（`408x336`）并增加顶部留白，标题字号与语言入口位置同步优化，降低 Tahoe 26 顶部遮挡风险。
+- 已完成：重绘低饱和轻量图标并同步到 App/Launcher 两套 `AppIcon.appiconset`，Finder 工具栏视觉权重明显降低。
+- 已完成：新增 `scripts/design/generate_light_icon.swift`，可一键再生全尺寸图标并保持两端主题一致。
+- 已完成：回归通过：`xcodebuild test -scheme PathBridgeApp`、`xcodebuild build -scheme PathBridgeLauncher`。
 - 已完成：新增 `scripts/release/make_dmg.sh`，支持本地一键 archive、DMG 打包、可选签名与公证（`DEVELOPER_ID_APPLICATION` + `NOTARYTOOL_PROFILE`）。
 - 已完成：新增 `docs/signing-and-dmg.md`，覆盖证书、公证 profile、环境变量与验证命令；`README.md` 已补充 DMG 打包入口。
 - 已完成：无签名链路验证通过，成功生成 `build/release/dmg/PathBridge-20260227-145758-401d97b.dmg`。

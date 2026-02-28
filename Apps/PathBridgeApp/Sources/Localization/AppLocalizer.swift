@@ -19,8 +19,9 @@ enum AppLocalizerKey: String {
     case language
     case restoreDefaultCommand
     case installGuideDefault
-    case installGuideLocated
-    case installGuideMissing
+    case installGuideAutoInstalled
+    case installGuideManualInstallRequired
+    case installGuideLauncherMissing
 }
 
 enum AppLocalizer {
@@ -37,10 +38,12 @@ enum AppLocalizer {
         switch state {
         case .defaultGuide:
             return text(.installGuideDefault, language: language)
-        case .located:
-            return text(.installGuideLocated, language: language)
-        case .missingLauncher:
-            return text(.installGuideMissing, language: language)
+        case .autoInstalled:
+            return text(.installGuideAutoInstalled, language: language)
+        case .manualInstallRequired:
+            return text(.installGuideManualInstallRequired, language: language)
+        case .launcherMissing:
+            return text(.installGuideLauncherMissing, language: language)
         }
     }
 
@@ -69,9 +72,10 @@ enum AppLocalizer {
         .notInstalledSuffix: "(未安装)",
         .language: "语言",
         .restoreDefaultCommand: "恢复默认命令模板",
-        .installGuideDefault: "系统限制：请点击“一键添加到 Finder”，然后按住 Command 将 PathBridgeLauncher 拖到 Finder 工具栏。",
-        .installGuideLocated: "已在 Finder 打开 PathBridgeLauncher，请按住 Command 拖到 Finder 工具栏。",
-        .installGuideMissing: "未检测到 PathBridgeLauncher。请先在 Xcode 运行一次 PathBridgeLauncher scheme。",
+        .installGuideDefault: "点击“一键添加到 Finder”将自动注入工具栏入口；若系统拦截会自动回退到手动拖拽。",
+        .installGuideAutoInstalled: "已自动添加 Finder 工具栏入口。点击 Finder 工具栏中的 PathBridge 图标可直接打开默认终端。",
+        .installGuideManualInstallRequired: "自动添加失败：已在 Finder 定位 PathBridgeLauncher。请按住 Command 拖到 Finder 工具栏。",
+        .installGuideLauncherMissing: "未检测到 PathBridgeLauncher。请重新安装 PathBridge，或先运行一次 PathBridgeLauncher scheme。",
     ]
 
     private static let en: [AppLocalizerKey: String] = [
@@ -92,9 +96,9 @@ enum AppLocalizer {
         .notInstalledSuffix: "(Not Installed)",
         .language: "Language",
         .restoreDefaultCommand: "Restore default command template",
-        .installGuideDefault: "System limitation: click \"Add PathBridge to Finder\", then hold Command and drag PathBridgeLauncher onto the Finder toolbar.",
-        .installGuideLocated: "PathBridgeLauncher is now shown in Finder. Hold Command and drag it to the Finder toolbar.",
-        .installGuideMissing: "PathBridgeLauncher was not found. Run the PathBridgeLauncher scheme in Xcode first.",
+        .installGuideDefault: "Click \"Add PathBridge to Finder\" to auto-insert the toolbar button. If blocked, fallback will show manual drag guidance.",
+        .installGuideAutoInstalled: "Finder toolbar entry was added automatically. Click PathBridge in Finder toolbar to open your default terminal.",
+        .installGuideManualInstallRequired: "Auto-install failed. PathBridgeLauncher has been revealed in Finder. Hold Command and drag it to Finder toolbar.",
+        .installGuideLauncherMissing: "PathBridgeLauncher was not found. Reinstall PathBridge, or run the PathBridgeLauncher scheme once in development.",
     ]
 }
-

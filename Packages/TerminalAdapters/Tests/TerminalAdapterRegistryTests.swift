@@ -5,14 +5,39 @@ import XCTest
 
 @MainActor
 final class TerminalAdapterRegistryTests: XCTestCase {
-    func test_kakuCLIArguments_newWindow() {
-        let args = KakuAdapter.makeCLIArguments(mode: .newWindow, cwd: URL(fileURLWithPath: "/tmp", isDirectory: true))
-        XCTAssertEqual(args, ["start", "--cwd", "/tmp"])
+    func test_kakuLaunchStrategies_newWindow() {
+        let args = KakuAdapter.makeLaunchStrategies(mode: .newWindow, cwd: URL(fileURLWithPath: "/tmp", isDirectory: true))
+        XCTAssertEqual(
+            args,
+            [
+                ["start", "--cwd", "/tmp"],
+                ["start", "--always-new-process", "--cwd", "/tmp"],
+                ["cli", "spawn", "--new-window", "--cwd", "/tmp"],
+            ]
+        )
     }
 
-    func test_kakuCLIArguments_newTab() {
-        let args = KakuAdapter.makeCLIArguments(mode: .newTab, cwd: URL(fileURLWithPath: "/tmp/project", isDirectory: true))
-        XCTAssertEqual(args, ["start", "--new-tab", "--cwd", "/tmp/project"])
+    func test_kakuLaunchStrategies_newTab() {
+        let args = KakuAdapter.makeLaunchStrategies(mode: .newTab, cwd: URL(fileURLWithPath: "/tmp/project", isDirectory: true))
+        XCTAssertEqual(
+            args,
+            [
+                ["cli", "spawn", "--cwd", "/tmp/project"],
+                ["start", "--new-tab", "--cwd", "/tmp/project"],
+                ["start", "--cwd", "/tmp/project"],
+            ]
+        )
+    }
+
+    func test_kakuExecutableCandidates_includeCLIAndGUIBinary() {
+        let appURL = URL(fileURLWithPath: "/Applications/Kaku.app", isDirectory: true)
+        XCTAssertEqual(
+            KakuAdapter.makeExecutableCandidates(forAppURL: appURL),
+            [
+                "/Applications/Kaku.app/Contents/MacOS/kaku",
+                "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+            ]
+        )
     }
 
     func test_preferredAdapter_returnsRequestedAdapterEvenWhenMarkedUninstalled() {

@@ -9,19 +9,17 @@ public struct WezTermAdapter: TerminalAdapter {
     private let supportedBundleIDs = [
         "com.github.wez.wezterm",
     ]
+    private let supportedAppNames = [
+        "WezTerm",
+    ]
 
     public init() {}
 
     public func isInstalled() -> Bool {
-        for candidate in supportedBundleIDs {
-            if NSWorkspace.shared.urlForApplication(withBundleIdentifier: candidate) != nil {
-                return true
-            }
-        }
-        return false
+        OpenCommandLauncher.isInstalled(bundleIdentifiers: supportedBundleIDs, appNames: supportedAppNames)
     }
 
     public func open(paths: [URL], mode: OpenMode, command: String?) throws {
-        try OpenCommandLauncher.open(bundleIdentifiers: supportedBundleIDs, appName: "WezTerm", paths: paths, mode: mode)
+        try OpenCommandLauncher.open(bundleIdentifiers: supportedBundleIDs, appNames: supportedAppNames, paths: paths, mode: mode)
     }
 }

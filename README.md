@@ -38,7 +38,7 @@ pluginkit -m -A -D -p com.apple.FinderSync | grep -i pathbridge
 4. 若未注册，手动注册后重启 Finder：
 
 ```bash
-pluginkit -a /Applications/PathBridge.app/Contents/PlugIns/PathBridgeFinderExtension.appex
+pluginkit -a /Applications/PathBridgeApp.app/Contents/PlugIns/PathBridgeFinderExtension.appex
 killall Finder
 ```
 

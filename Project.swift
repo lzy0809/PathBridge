@@ -12,6 +12,7 @@ let project = Project(
         base: [
             "SWIFT_VERSION": "6.0",
             "MACOSX_DEPLOYMENT_TARGET": "14.0",
+            "DEVELOPMENT_TEAM": "6K9FQJ7SA2",
         ]
     ),
     targets: [
@@ -25,6 +26,7 @@ let project = Project(
                 "CFBundleDisplayName": "PathBridge",
                 "CFBundleShortVersionString": "0.1.0",
                 "CFBundleVersion": "1",
+                "NSAppleEventsUsageDescription": "PathBridge needs Finder automation permission to read the current Finder folder and open it in your selected terminal.",
             ]),
             sources: ["Apps/PathBridgeApp/Sources/**"],
             resources: ["Apps/PathBridgeApp/Resources/**"],
@@ -32,12 +34,12 @@ let project = Project(
                 .target(name: "PathBridgeCore"),
                 .target(name: "PathBridgeShared"),
                 .target(name: "PathBridgeTerminalAdapters"),
-                .target(name: "PathBridgeFinderExtension"),
             ],
             settings: .settings(
                 base: [
                     "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
                     "CODE_SIGN_ENTITLEMENTS": "Apps/PathBridgeApp/PathBridgeApp.entitlements",
+                    "DEVELOPMENT_TEAM": "6K9FQJ7SA2",
                 ]
             )
         ),
@@ -64,6 +66,8 @@ let project = Project(
             settings: .settings(
                 base: [
                     "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+                    "CODE_SIGN_ENTITLEMENTS": "Apps/PathBridgeLauncher/PathBridgeLauncher.entitlements",
+                    "DEVELOPMENT_TEAM": "6K9FQJ7SA2",
                 ]
             )
         ),
@@ -94,6 +98,7 @@ let project = Project(
             settings: .settings(
                 base: [
                     "CODE_SIGN_ENTITLEMENTS": "Extensions/PathBridgeFinderExtension/PathBridgeFinderExtension.entitlements",
+                    "DEVELOPMENT_TEAM": "6K9FQJ7SA2",
                 ]
             )
         ),

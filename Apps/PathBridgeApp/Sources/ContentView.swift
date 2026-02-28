@@ -12,10 +12,13 @@ struct ContentView: View {
             header
             settingsForm
             installSection
+            languageSection
             supportSection
         }
-        .padding(14)
-        .frame(minWidth: 400, idealWidth: 430, maxWidth: 470, minHeight: 330, idealHeight: 360)
+        .padding(.top, 34)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 12)
+        .frame(minWidth: 392, idealWidth: 420, maxWidth: 460, minHeight: 396, idealHeight: 410)
         .sheet(isPresented: $showSupportSheet) {
             supportSheet
         }
@@ -26,26 +29,14 @@ struct ContentView: View {
     }
 
     private var header: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(spacing: 2) {
-                Text("PathBridge")
-                    .font(.system(size: 34, weight: .semibold))
-                Text(t(.finderToTerminal))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary.opacity(0.8))
-            }
-            .frame(maxWidth: .infinity)
-
-            Picker(t(.language), selection: $settingsViewModel.appLanguage) {
-                ForEach(AppLanguage.allCases) { language in
-                    Text(language.pickerLabel).tag(language)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.menu)
-            .frame(width: 74)
-            .padding(.top, 10)
+        VStack(alignment: .center, spacing: 2) {
+            Text("PathBridge")
+                .font(.system(size: 21, weight: .semibold))
+            Text(t(.finderToTerminal))
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(.secondary.opacity(0.8))
         }
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private var settingsForm: some View {
@@ -98,16 +89,16 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.orange)
 
                 Text(AppLocalizer.installGuideMessage(language: settingsViewModel.appLanguage, state: extensionGuideViewModel.state))
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: 12, weight: .regular))
                     .foregroundStyle(.orange)
                     .lineSpacing(1)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.vertical, 8)
+            .padding(.vertical, 7)
             .padding(.horizontal, 10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
@@ -133,8 +124,26 @@ struct ContentView: View {
         }
         .buttonStyle(.bordered)
         .frame(maxWidth: .infinity)
+        .padding(.top, 6)
+        .padding(.bottom, 10)
+    }
+
+    private var languageSection: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            Text(t(.language))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+            Picker(t(.language), selection: $settingsViewModel.appLanguage) {
+                ForEach(AppLanguage.allCases) { language in
+                    Text(language.pickerLabel).tag(language)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 76)
+        }
         .padding(.top, 2)
-        .padding(.bottom, 8)
     }
 
     private var supportSheet: some View {

@@ -6,38 +6,54 @@ import PathBridgeShared
 enum OpenCommandLauncher {
     private static let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge.adapters", category: "open-command")
 
+    static func isInstalled(bundleIdentifiers: [String], appNames: [String]) -> Bool {
+        resolveApplicationURL(bundleIdentifiers: bundleIdentifiers, appNames: appNames) != nil
+    }
+
     static func open(bundleIdentifiers: [String], appName: String, paths: [URL], mode: OpenMode) throws {
+        try open(bundleIdentifiers: bundleIdentifiers, appNames: [appName], paths: paths, mode: mode)
+    }
+
+    static func open(bundleIdentifiers: [String], appNames: [String], paths: [URL], mode: OpenMode) throws {
+        let primaryName = appNames.first ?? "Terminal"
         logger.info(
-            "attempt bundle launch appName=\(appName, privacy: .public) mode=\(mode.rawValue, privacy: .public) pathCount=\(paths.count)"
+            "attempt bundle launch appName=\(primaryName, privacy: .public) mode=\(mode.rawValue, privacy: .public) pathCount=\(paths.count)"
         )
-        if let bundleIdentifier = resolveBundleIdentifier(bundleIdentifiers: bundleIdentifiers) {
+        if let resolvedURL = resolveApplicationURL(bundleIdentifiers: bundleIdentifiers, appNames: appNames) {
             do {
-                logger.info("bundle resolved bundleID=\(bundleIdentifier, privacy: .public)")
-                try open(arguments: arguments(bundleIdentifier: bundleIdentifier, appName: nil, paths: paths, mode: mode))
+                logger.info("bundle resolved appURL=\(resolvedURL.path, privacy: .public)")
+                try open(arguments: arguments(bundleIdentifier: nil, appPath: resolvedURL.path, appName: nil, paths: paths, mode: mode))
                 return
             } catch {
                 logger.error(
-                    "bundle launch failed bundleID=\(bundleIdentifier, privacy: .public) error=\(error.localizedDescription, privacy: .public), fallback to appName"
+                    "bundle launch failed appURL=\(resolvedURL.path, privacy: .public) error=\(error.localizedDescription, privacy: .public), fallback to appName"
                 )
                 // Fall back to app name if bundle launch fails unexpectedly.
             }
         }
 
-        try open(appName: appName, paths: paths, mode: mode)
+        try open(appName: primaryName, paths: paths, mode: mode)
     }
 
     static func open(appName: String, paths: [URL], mode: OpenMode) throws {
         logger.info("attempt app launch appName=\(appName, privacy: .public) mode=\(mode.rawValue, privacy: .public) pathCount=\(paths.count)")
-        try open(arguments: arguments(bundleIdentifier: nil, appName: appName, paths: paths, mode: mode))
+        if let resolvedURL = resolveApplicationURL(bundleIdentifiers: [], appNames: [appName]) {
+            logger.info("app resolved appURL=\(resolvedURL.path, privacy: .public)")
+            try open(arguments: arguments(bundleIdentifier: nil, appPath: resolvedURL.path, appName: nil, paths: paths, mode: mode))
+            return
+        }
+        try open(arguments: arguments(bundleIdentifier: nil, appPath: nil, appName: appName, paths: paths, mode: mode))
     }
 
-    private static func arguments(bundleIdentifier: String?, appName: String?, paths: [URL], mode: OpenMode) -> [String] {
+    private static func arguments(bundleIdentifier: String?, appPath: String?, appName: String?, paths: [URL], mode: OpenMode) -> [String] {
         var args: [String] = []
         if mode == .newWindow {
             args.append("-n")
         }
         if let bundleIdentifier {
             args += ["-b", bundleIdentifier]
+        } else if let appPath {
+            args += ["-a", appPath]
         } else if let appName {
             args += ["-a", appName]
         }
@@ -72,12 +88,49 @@ enum OpenCommandLauncher {
         logger.info("process exit success")
     }
 
-    private static func resolveBundleIdentifier(bundleIdentifiers: [String]) -> String? {
+    private static func resolveApplicationURL(bundleIdentifiers: [String], appNames: [String]) -> URL? {
         for bundleIdentifier in bundleIdentifiers {
-            if NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) != nil {
-                return bundleIdentifier
+            if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
+                return appURL
             }
         }
+
+        for appName in appNames {
+            if let appURL = scanCommonApplicationDirectories(appName: appName) {
+                return appURL
+            }
+        }
+        return nil
+    }
+
+    private static func scanCommonApplicationDirectories(appName: String) -> URL? {
+        let normalizedName = appName.hasSuffix(".app") ? appName : "\(appName).app"
+        var candidateNames = [normalizedName]
+
+        if appName.caseInsensitiveCompare("iTerm") == .orderedSame {
+            candidateNames.append("iTerm2.app")
+        }
+        if appName.caseInsensitiveCompare("iTerm2") == .orderedSame {
+            candidateNames.append("iTerm.app")
+        }
+
+        let roots: [URL] = [
+            URL(fileURLWithPath: "/Applications", isDirectory: true),
+            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications", isDirectory: true),
+            URL(fileURLWithPath: "/Applications/Setapp", isDirectory: true),
+            URL(fileURLWithPath: "/Applications/Utilities", isDirectory: true),
+            URL(fileURLWithPath: "/System/Applications/Utilities", isDirectory: true),
+        ]
+
+        for root in roots where FileManager.default.fileExists(atPath: root.path) {
+            for candidateName in candidateNames {
+                let candidate = root.appendingPathComponent(candidateName, isDirectory: true)
+                if FileManager.default.fileExists(atPath: candidate.path) {
+                    return candidate
+                }
+            }
+        }
+
         return nil
     }
 }

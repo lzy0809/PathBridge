@@ -6,7 +6,6 @@ import PathBridgeShared
 
 final class FinderSync: FIFinderSync {
     private let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge", category: "finder-extension")
-    private let hostBundleID = "com.liangzhiyuan.pathbridge"
     private let launcherBundleID = "com.liangzhiyuan.pathbridge.launcher"
     private let defaultTerminalMarker = "default-terminal"
 
@@ -64,50 +63,18 @@ final class FinderSync: FIFinderSync {
             "request prepared requestID=\(request.requestID, privacy: .public) terminal=\(request.terminalID, privacy: .public) mode=\(request.mode.rawValue, privacy: .public) pathCount=\(request.paths.count)"
         )
 
-        if ensureHostIsRunning() {
-            do {
-                try OpenRequestChannel.post(request)
-                logger.info("request dispatched to host requestID=\(request.requestID, privacy: .public)")
-                return
-            } catch {
-                logger.error("request dispatch failed requestID=\(request.requestID, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
-            }
-        } else {
-            logger.info("host not running requestID=\(request.requestID, privacy: .public), using fallback")
-        }
-
-        if openWithLauncher(urls: normalized) {
-            logger.info("fallback launcher dispatched requestID=\(request.requestID, privacy: .public) pathCount=\(normalized.count)")
+        if openWithLauncher(urls: normalized, requestID: request.requestID) {
+            logger.info("launcher-open dispatched requestID=\(request.requestID, privacy: .public) pathCount=\(normalized.count)")
             return
         }
 
         NSSound.beep()
         UserToastNotifier.show(title: "PathBridge 暂不支持", body: "未能打开所选终端，请先确认 PathBridgeLauncher 可用")
-        logger.error("fallback launcher unavailable requestID=\(request.requestID, privacy: .public)")
+        logger.error("launcher-open unavailable requestID=\(request.requestID, privacy: .public)")
     }
 
-    private func ensureHostIsRunning() -> Bool {
-        if !NSRunningApplication.runningApplications(withBundleIdentifier: hostBundleID).isEmpty {
-            return true
-        }
-
-        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: hostBundleID) else {
-            return false
-        }
-        NSWorkspace.shared.open(appURL)
-
-        for _ in 0 ..< 10 {
-            if !NSRunningApplication.runningApplications(withBundleIdentifier: hostBundleID).isEmpty {
-                return true
-            }
-            usleep(50_000)
-        }
-
-        return false
-    }
-
-    private func openWithLauncher(urls: [URL]) -> Bool {
-        guard let launcherURL = resolveLauncherAppURL() else {
+    private func openWithLauncher(urls: [URL], requestID: String) -> Bool {
+        guard let launcherURL = resolveLauncherURL() else {
             logger.error("launcher resolve failed")
             return false
         }
@@ -115,22 +82,24 @@ final class FinderSync: FIFinderSync {
 
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
-
-        NSWorkspace.shared.open(urls, withApplicationAt: launcherURL, configuration: configuration) { _, _ in }
+        NSWorkspace.shared.open(urls, withApplicationAt: launcherURL, configuration: configuration) { _, error in
+            if let error {
+                Logger(subsystem: "com.liangzhiyuan.pathbridge", category: "finder-extension")
+                    .error("launcher open completion error requestID=\(requestID, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            }
+        }
         return true
     }
 
-    private func resolveLauncherAppURL() -> URL? {
-        // Prefer launcher built next to current app bundle to avoid stale DerivedData bundles.
-        let bundledLauncherURL = Bundle.main.bundleURL
+    private func resolveLauncherURL() -> URL? {
+        // Prefer launcher bundled inside host app in production builds.
+        let embeddedLauncherURL = Bundle.main.bundleURL
             .deletingLastPathComponent() // PlugIns
             .deletingLastPathComponent() // Contents
-            .deletingLastPathComponent() // PathBridgeApp.app
-            .deletingLastPathComponent() // Build/Products/Debug
-            .appendingPathComponent("PathBridgeLauncher.app", isDirectory: true)
+            .appendingPathComponent("MacOS/PathBridgeLauncher.app", isDirectory: true)
 
-        if FileManager.default.fileExists(atPath: bundledLauncherURL.path) {
-            return bundledLauncherURL
+        if FileManager.default.fileExists(atPath: embeddedLauncherURL.path) {
+            return embeddedLauncherURL
         }
 
         return NSWorkspace.shared.urlForApplication(withBundleIdentifier: launcherBundleID)

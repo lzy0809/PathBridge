@@ -5,9 +5,12 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WORKSPACE_PATH="${WORKSPACE_PATH:-$ROOT_DIR/PathBridge.xcworkspace}"
 SCHEME="${SCHEME:-PathBridgeApp}"
 APP_NAME="${APP_NAME:-PathBridgeApp.app}"
+LAUNCHER_SCHEME="${LAUNCHER_SCHEME:-PathBridgeLauncher}"
+LAUNCHER_APP_NAME="${LAUNCHER_APP_NAME:-PathBridgeLauncher.app}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$ROOT_DIR/build/release}"
 ARCHIVE_PATH="$OUTPUT_ROOT/${SCHEME}.xcarchive"
 EXPORT_APP_DIR="$OUTPUT_ROOT/app"
+LAUNCHER_DERIVED_DATA="$OUTPUT_ROOT/launcher-derived-data"
 DMG_STAGE_DIR="$OUTPUT_ROOT/dmg-stage"
 DMG_DIR="$OUTPUT_ROOT/dmg"
 BUILD_DATE="$(date +%Y%m%d-%H%M%S)"
@@ -19,11 +22,13 @@ NOTARYTOOL_PROFILE="${NOTARYTOOL_PROFILE:-}"
 SKIP_TUIST_GENERATE="${SKIP_TUIST_GENERATE:-0}"
 ALLOW_UNSIGNED_ARCHIVE="${ALLOW_UNSIGNED_ARCHIVE:-0}"
 SKIP_ARCHIVE="${SKIP_ARCHIVE:-0}"
+SKIP_LAUNCHER_BUILD="${SKIP_LAUNCHER_BUILD:-0}"
 
 DMG_NAME="PathBridge-${VERSION_TAG}.dmg"
 DMG_PATH="$DMG_DIR/$DMG_NAME"
 APP_PATH_IN_ARCHIVE="$ARCHIVE_PATH/Products/Applications/$APP_NAME"
 FINAL_APP_PATH="$EXPORT_APP_DIR/$APP_NAME"
+EMBEDDED_LAUNCHER_PATH="$FINAL_APP_PATH/Contents/MacOS/$LAUNCHER_APP_NAME"
 
 echo "[release] root: $ROOT_DIR"
 echo "[release] output: $OUTPUT_ROOT"
@@ -73,14 +78,48 @@ rm -rf "$EXPORT_APP_DIR"
 mkdir -p "$EXPORT_APP_DIR"
 cp -R "$APP_PATH_IN_ARCHIVE" "$FINAL_APP_PATH"
 
+if [[ "$SKIP_LAUNCHER_BUILD" != "1" ]]; then
+  echo "[release] xcodebuild build launcher"
+  xcodebuild build \
+    -workspace "$WORKSPACE_PATH" \
+    -scheme "$LAUNCHER_SCHEME" \
+    -configuration Release \
+    -destination "generic/platform=macOS" \
+    -derivedDataPath "$LAUNCHER_DERIVED_DATA"
+
+  LAUNCHER_BUILT_APP="$LAUNCHER_DERIVED_DATA/Build/Products/Release/$LAUNCHER_APP_NAME"
+  if [[ ! -d "$LAUNCHER_BUILT_APP" ]]; then
+    DETECTED_LAUNCHER_PATH="$(find "$LAUNCHER_DERIVED_DATA/Build/Products/Release" -maxdepth 1 -name "*.app" -type d | grep -E "PathBridgeLauncher\\.app$" | head -n 1 || true)"
+    if [[ -n "$DETECTED_LAUNCHER_PATH" ]]; then
+      LAUNCHER_BUILT_APP="$DETECTED_LAUNCHER_PATH"
+    else
+      echo "[release][error] launcher app not found: $LAUNCHER_BUILT_APP" >&2
+      exit 1
+    fi
+  fi
+
+  rm -rf "$EMBEDDED_LAUNCHER_PATH"
+  mkdir -p "$(dirname "$EMBEDDED_LAUNCHER_PATH")"
+  cp -R "$LAUNCHER_BUILT_APP" "$EMBEDDED_LAUNCHER_PATH"
+  echo "[release] embedded launcher: $EMBEDDED_LAUNCHER_PATH"
+else
+  echo "[release] skip launcher build"
+fi
+
+if [[ ! -d "$EMBEDDED_LAUNCHER_PATH" ]]; then
+  echo "[release][error] embedded launcher missing: $EMBEDDED_LAUNCHER_PATH" >&2
+  exit 1
+fi
+
 if [[ -n "$DEVELOPER_ID_APPLICATION" ]]; then
   echo "[release] codesign app with: $DEVELOPER_ID_APPLICATION"
   codesign --force --deep --options runtime --timestamp --sign "$DEVELOPER_ID_APPLICATION" "$FINAL_APP_PATH"
 else
-  echo "[release] DEVELOPER_ID_APPLICATION not set, skip app re-sign"
+  echo "[release] DEVELOPER_ID_APPLICATION not set, ad-hoc re-sign app"
+  codesign --force --deep --timestamp=none --sign - "$FINAL_APP_PATH"
 fi
 
-if [[ -n "$DEVELOPER_ID_APPLICATION" || "$ALLOW_UNSIGNED_ARCHIVE" != "1" ]]; then
+if [[ "$ALLOW_UNSIGNED_ARCHIVE" != "1" ]]; then
   echo "[release] codesign verify app"
   codesign --verify --deep --strict --verbose=2 "$FINAL_APP_PATH"
 else
@@ -127,5 +166,6 @@ shasum -a 256 "$DMG_PATH" | tee "$DMG_PATH.sha256"
 echo
 echo "[release] done"
 echo "  app: $FINAL_APP_PATH"
+echo "  embedded launcher: $EMBEDDED_LAUNCHER_PATH"
 echo "  dmg: $DMG_PATH"
 echo "  sha: $DMG_PATH.sha256"
