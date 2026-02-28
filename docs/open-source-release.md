@@ -28,8 +28,8 @@ gh auth status
 
 ```bash
 scripts/release/publish_open_source.sh \
-  --version 0.1.0 \
-  --dmg build/release/dmg/PathBridge-xxxx.dmg
+  --version 0.2.0 \
+  --dmg build/release/dmg/PathBridge_v0.2.0.dmg
 ```
 
 脚本会自动完成：
@@ -68,17 +68,17 @@ scripts/release/make_dmg.sh
 2. 打 tag：
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 3. 发布（上传 DMG + SHA256）：
 
 ```bash
-gh release create v0.1.0 \
-  build/release/dmg/PathBridge-*.dmg \
-  build/release/dmg/PathBridge-*.dmg.sha256 \
-  --title "PathBridge v0.1.0" \
+gh release create v0.2.0 \
+  build/release/dmg/PathBridge_v*.dmg \
+  build/release/dmg/PathBridge_v*.dmg.sha256 \
+  --title "PathBridge v0.2.0" \
   --notes "Initial public release"
 ```
 

@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Usage:
 # scripts/release/generate_cask.sh \
-#   --version 0.1.0 \
-#   --dmg-name PathBridge-20260228-112227-82dd1a2.dmg \
+#   --version 0.2.0 \
+#   --dmg-name PathBridge_v0.2.0.dmg \
 #   --sha256 <sha256> \
 #   --output /path/to/homebrew-tap/Casks/pathbridge.rb
 

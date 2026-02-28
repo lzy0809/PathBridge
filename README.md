@@ -3,13 +3,22 @@
 PathBridge 是一个 macOS Finder 到终端的效率工具。
 核心目标是：在 Finder 工具栏点击一次图标，直接用你选定的终端打开当前目录。
 
+PathBridge is a macOS Finder-to-terminal utility.
+Its core goal is one click in Finder toolbar to open the current folder in your selected terminal.
+
 ## 功能特性
 
 - Finder 工具栏一键打开当前目录到终端
 - 可选择默认终端与打开方式（新窗口 / 新标签）
 - 支持自定义命令模板（默认：`cd %PATH_QUOTED%; clear; pwd`）
-- 支持简体中文 / English
-- 支持打赏弹窗（双收款码）
+- 支持中英文界面（简体中文 / English）
+
+## Features
+
+- One-click open current Finder folder in terminal from toolbar
+- Select default terminal and open mode (new window / new tab)
+- Custom command template (default: `cd %PATH_QUOTED%; clear; pwd`)
+- Bilingual UI (Simplified Chinese / English)
 
 ## 当前支持终端
 
@@ -22,7 +31,7 @@ PathBridge 是一个 macOS Finder 到终端的效率工具。
 
 ## 安装（普通用户）
 
-1. 打开 [Releases](../../releases) 下载最新 `PathBridge-*.dmg`
+1. 打开 [Releases](../../releases) 下载最新 `PathBridge_v*.dmg`
 2. 将 `PathBridgeApp.app` 拖入 `Applications`
 3. 启动一次 PathBridge，点击界面内「一键添加到 Finder」
 4. 如果系统拦截自动注入，按提示手动 `Command + 拖拽` 到 Finder 工具栏
@@ -73,8 +82,8 @@ brew install --cask lzy0809/tap/pathbridge
 
 ```bash
 scripts/release/publish_open_source.sh \
-  --version 0.1.0 \
-  --dmg build/release/dmg/PathBridge-xxxx.dmg
+  --version 0.2.0 \
+  --dmg build/release/dmg/PathBridge_v0.2.0.dmg
 ```
 
 ## 架构概览

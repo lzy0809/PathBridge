@@ -18,13 +18,13 @@ scripts/release/make_dmg.sh
 产物目录：
 
 - `build/release/app/PathBridgeApp.app`
-- `build/release/dmg/PathBridge-<timestamp>-<sha>.dmg`
-- `build/release/dmg/PathBridge-<...>.dmg.sha256`
+- `build/release/dmg/PathBridge_v<version>.dmg`
+- `build/release/dmg/PathBridge_v<version>.dmg.sha256`
 
 可用下列命令提取校验值（用于 GitHub Release / Homebrew Cask）：
 
 ```bash
-shasum -a 256 build/release/dmg/PathBridge-*.dmg
+shasum -a 256 build/release/dmg/PathBridge_v*.dmg
 ```
 
 ## 3. 签名 + 打包
@@ -69,7 +69,8 @@ scripts/release/make_dmg.sh
 
 - `SCHEME`：默认 `PathBridgeApp`
 - `WORKSPACE_PATH`：默认 `PathBridge.xcworkspace`
-- `VERSION_TAG`：自定义 DMG 版本名后缀
+- `APP_VERSION`：显式指定 DMG 版本号（默认读取 App `CFBundleShortVersionString`）
+- `DMG_NAME`：自定义 DMG 文件名（默认 `PathBridge_v<version>.dmg`）
 - `SKIP_TUIST_GENERATE=1`：跳过 `tuist generate`
 - `ALLOW_UNSIGNED_ARCHIVE=1`：Archive 阶段禁用签名（仅本地验证）
 
@@ -86,8 +87,8 @@ spctl --assess --type open --context context:primary-signature -v build/release/
 
 ```bash
 scripts/release/generate_cask.sh \
-  --version 0.1.0 \
-  --dmg-name PathBridge-20260228-112227-82dd1a2.dmg \
+  --version 0.2.0 \
+  --dmg-name PathBridge_v0.2.0.dmg \
   --sha256 <sha256> \
   --output /path/to/homebrew-tap/Casks/pathbridge.rb
 ```

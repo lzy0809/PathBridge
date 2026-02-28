@@ -1,5 +1,16 @@
 # Todo
 
+## 当前任务（2026-02-28，图标基线切换）
+- [x] 将 App/Launcher 图标切换为 `build/design/reference` 基线样式。
+- [x] 同步生成 AppIcon 全尺寸资源并验证两端一致。
+- [x] 本地构建验证与产物检查（不推远端）。
+
+## 当前任务（2026-02-28，A风格极简图标二次迭代）
+- [x] 基于“浅灰圆角底”重做图标元素，移除桥拱与横线，仅保留 `^_^`。
+- [x] 让 `^_^` 的颜色与线宽对齐当前主色（接近旧横线视觉权重）。
+- [x] 生成本地预览图（不覆盖正式 AppIcon，不推远端）供用户确认。
+- [x] 用户确认后再应用到 App/Launcher 图标资源并本地验证。
+
 ## 当前任务（2026-02-28，开源发布与维护性收敛）
 - [x] 清理冗余代码与过时链路（未使用字段、未使用模块、历史兼容残留），降低维护成本。
 - [x] 收敛 Xcode scheme，仅保留对外开发必需方案，避免 target 级 scheme 噪音。
@@ -166,6 +177,10 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：按用户指令切回 `build/design/reference` 图标基线，并通过脚本生成 App/Launcher 全尺寸资源；两端图标逐项比对一致。
+- 已完成：图标按确认的 M2 方向重绘并正式应用到 App/Launcher（保留系统感外框、内卡片更干净、`^_^` 中对比），两端全尺寸资源已同步。
+- 已完成：DMG 默认命名改为 `PathBridge_v<version>.dmg`，版本号默认读取 `CFBundleShortVersionString`，并支持 `APP_VERSION` / `DMG_NAME` 覆盖。
+- 已完成：README 功能特性移除“打赏弹窗（双收款码）”描述，保留并强化“中英文界面支持”。
 - 已完成：2026-02-28 开源发布与维护性收敛。移除未使用模块（`TerminalLauncher`、`OpenRequestChannel`）与过时设置字段，相关测试已同步更新并通过。
 - 已完成：Scheme 收敛到 `PathBridgeApp` / `PathBridgeLauncher` 两个共享方案；Workspace 侧自动方案在 Tuist 中默认保留但已本机隐藏，开发入口不再混乱。
 - 已完成：图标生成脚本改为纯自绘自有风格（不依赖第三方素材），并同步覆盖 App/Launcher 两套 `AppIcon`。

@@ -18,7 +18,7 @@ gh repo create lzy0809/homebrew-tap --public
 
 ```ruby
 cask "pathbridge" do
-  version "0.1.0"
+  version "0.2.0"
   sha256 "REPLACE_WITH_DMG_SHA256"
 
   url "https://github.com/lzy0809/PathBridge/releases/download/v#{version}/PathBridge-REPLACE_WITH_DMG_NAME.dmg"
