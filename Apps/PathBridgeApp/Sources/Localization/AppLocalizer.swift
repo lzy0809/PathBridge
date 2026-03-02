@@ -21,7 +21,6 @@ enum AppLocalizerKey: String {
     case installGuideDefault
     case installGuideAutoInstalled
     case installGuideManualInstallRequired
-    case installGuideLauncherMissing
 }
 
 enum AppLocalizer {
@@ -42,8 +41,6 @@ enum AppLocalizer {
             return text(.installGuideAutoInstalled, language: language)
         case .manualInstallRequired:
             return text(.installGuideManualInstallRequired, language: language)
-        case .launcherMissing:
-            return text(.installGuideLauncherMissing, language: language)
         }
     }
 
@@ -74,8 +71,7 @@ enum AppLocalizer {
         .restoreDefaultCommand: "恢复默认命令模板",
         .installGuideDefault: "点击“一键添加到 Finder”将自动注入工具栏入口；若系统拦截会自动回退到手动拖拽。",
         .installGuideAutoInstalled: "已自动添加 Finder 工具栏入口。点击 Finder 工具栏中的 PathBridge 图标可直接打开默认终端。",
-        .installGuideManualInstallRequired: "自动添加失败：已在 Finder 定位 PathBridgeLauncher。请按住 Command 拖到 Finder 工具栏。",
-        .installGuideLauncherMissing: "未检测到 PathBridgeLauncher。请重新安装 PathBridge，或先运行一次 PathBridgeLauncher scheme。",
+        .installGuideManualInstallRequired: "自动添加失败：已在 Finder 定位 PathBridge。请按住 Command 拖到 Finder 工具栏。",
     ]
 
     private static let en: [AppLocalizerKey: String] = [
@@ -98,7 +94,6 @@ enum AppLocalizer {
         .restoreDefaultCommand: "Restore default command template",
         .installGuideDefault: "Click \"Add PathBridge to Finder\" to auto-insert the toolbar button. If blocked, fallback will show manual drag guidance.",
         .installGuideAutoInstalled: "Finder toolbar entry was added automatically. Click PathBridge in Finder toolbar to open your default terminal.",
-        .installGuideManualInstallRequired: "Auto-install failed. PathBridgeLauncher has been revealed in Finder. Hold Command and drag it to Finder toolbar.",
-        .installGuideLauncherMissing: "PathBridgeLauncher was not found. Reinstall PathBridge, or run the PathBridgeLauncher scheme once in development.",
+        .installGuideManualInstallRequired: "Auto-install failed. PathBridge has been revealed in Finder. Hold Command and drag it to Finder toolbar.",
     ]
 }

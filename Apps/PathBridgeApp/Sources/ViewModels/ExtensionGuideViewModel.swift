@@ -4,7 +4,6 @@ enum ExtensionGuideState: Equatable {
     case defaultGuide
     case autoInstalled
     case manualInstallRequired
-    case launcherMissing
 }
 
 @MainActor
@@ -20,9 +19,6 @@ final class ExtensionGuideViewModel: ObservableObject {
         case .requiresManualInstall:
             installer.revealForManualInstall()
             state = .manualInstallRequired
-        case .launcherMissing:
-            installer.revealForManualInstall()
-            state = .launcherMissing
         }
     }
 }

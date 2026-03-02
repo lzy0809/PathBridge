@@ -4,7 +4,6 @@ import OSLog
 
 enum FinderToolbarInstallResult: Equatable {
     case autoInstalled
-    case launcherMissing
     case requiresManualInstall
 }
 
@@ -16,15 +15,15 @@ final class FinderToolbarInstaller {
     private let toolbarPlistsKey = "TB Item Plists"
     private let finderSearchIdentifier = "com.apple.finder.SRCH"
     private let finderLocationIdentifier = "com.apple.finder.loc "
-    private let launcherBundleID = "com.liangzhiyuan.pathbridge.launcher"
+    private let appBundleID = "com.liangzhiyuan.pathbridge"
 
     func install() -> FinderToolbarInstallResult {
-        guard let launcherURL = resolveLauncherURL() else {
-            logger.error("install failed reason=launcher-missing")
-            return .launcherMissing
+        guard let appURL = resolveTargetAppURL() else {
+            logger.error("install failed reason=app-missing")
+            return .requiresManualInstall
         }
 
-        guard updateFinderToolbar(with: launcherURL) else {
+        guard updateFinderToolbar(with: appURL) else {
             logger.error("install failed reason=update-toolbar-failed")
             return .requiresManualInstall
         }
@@ -34,25 +33,17 @@ final class FinderToolbarInstaller {
             return .requiresManualInstall
         }
 
-        logger.info("install success launcher=\(launcherURL.path, privacy: .public)")
+        logger.info("install success app=\(appURL.path, privacy: .public)")
         return .autoInstalled
     }
 
-    func resolveLauncherURL() -> URL? {
-        let embedded = Bundle.main.bundleURL
-            .appendingPathComponent("Contents/MacOS/PathBridgeLauncher.app", isDirectory: true)
-        if FileManager.default.fileExists(atPath: embedded.path) {
-            return embedded
+    func resolveTargetAppURL() -> URL? {
+        let bundleURL = Bundle.main.bundleURL
+        if FileManager.default.fileExists(atPath: bundleURL.path) {
+            return bundleURL
         }
 
-        let sibling = Bundle.main.bundleURL
-            .deletingLastPathComponent()
-            .appendingPathComponent("PathBridgeLauncher.app", isDirectory: true)
-        if FileManager.default.fileExists(atPath: sibling.path) {
-            return sibling
-        }
-
-        if let installed = NSWorkspace.shared.urlForApplication(withBundleIdentifier: launcherBundleID) {
+        if let installed = NSWorkspace.shared.urlForApplication(withBundleIdentifier: appBundleID) {
             return installed
         }
 
@@ -60,14 +51,14 @@ final class FinderToolbarInstaller {
     }
 
     func revealForManualInstall() {
-        if let launcherURL = resolveLauncherURL() {
-            NSWorkspace.shared.activateFileViewerSelecting([launcherURL])
+        if let appURL = resolveTargetAppURL() {
+            NSWorkspace.shared.activateFileViewerSelecting([appURL])
             return
         }
         NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
     }
 
-    private func updateFinderToolbar(with launcherURL: URL) -> Bool {
+    private func updateFinderToolbar(with appURL: URL) -> Bool {
         var finderPrefs = UserDefaults.standard.persistentDomain(forName: finderDomain) ?? [:]
         var toolbar = finderPrefs[toolbarKey] as? [String: Any] ?? [:]
 
@@ -85,12 +76,12 @@ final class FinderToolbarInstaller {
 
         pairs.removeAll { pair in
             guard pair.id == finderLocationIdentifier else { return false }
-            return isPathBridgeLauncherItem(pair.plist)
+            return isPathBridgeItem(pair.plist)
         }
 
-        let launcherPlist = makeLauncherToolbarItemPlist(launcherURL: launcherURL)
+        let appPlist = makeToolbarItemPlist(appURL: appURL)
         let insertIndex = pairs.firstIndex(where: { $0.id == finderSearchIdentifier }) ?? pairs.count
-        pairs.insert((finderLocationIdentifier, launcherPlist), at: insertIndex)
+        pairs.insert((finderLocationIdentifier, appPlist), at: insertIndex)
 
         toolbar[toolbarItemsKey] = pairs.map(\.id)
         var rebuiltPlists: [String: Any] = [:]
@@ -108,19 +99,19 @@ final class FinderToolbarInstaller {
         return synced
     }
 
-    private func makeLauncherToolbarItemPlist(launcherURL: URL) -> [String: Any] {
+    private func makeToolbarItemPlist(appURL: URL) -> [String: Any] {
         var value: [String: Any] = [
-            "_CFURLString": launcherURL.absoluteString,
+            "_CFURLString": appURL.absoluteString,
             "_CFURLStringType": 15,
         ]
 
-        if let bookmark = try? launcherURL.bookmarkData(options: [.suitableForBookmarkFile], includingResourceValuesForKeys: nil, relativeTo: nil) {
+        if let bookmark = try? appURL.bookmarkData(options: [.suitableForBookmarkFile], includingResourceValuesForKeys: nil, relativeTo: nil) {
             value["_CFURLAliasData"] = bookmark
         }
         return value
     }
 
-    private func isPathBridgeLauncherItem(_ plist: Any?) -> Bool {
+    private func isPathBridgeItem(_ plist: Any?) -> Bool {
         guard
             let dict = plist as? [String: Any],
             let urlString = dict["_CFURLString"] as? String,
@@ -129,10 +120,10 @@ final class FinderToolbarInstaller {
             return false
         }
 
-        if urlString.contains("PathBridgeLauncher.app") {
+        if urlString.contains("PathBridgeApp.app") || urlString.contains("/PathBridge.app") {
             return true
         }
-        if let url = URL(string: urlString), url.path.contains("PathBridgeLauncher.app") {
+        if let url = URL(string: urlString), url.path.contains("PathBridgeApp.app") || url.path.contains("/PathBridge.app") {
             return true
         }
         return false

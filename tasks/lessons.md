@@ -1,5 +1,20 @@
 # Lessons Learned
 
+- 日期：2026-03-02
+  - 用户纠正：发布包必须保持 Go2Shell 式单架构，不接受回退到 `PathBridgeApp + PathBridgeLauncher` 双可执行体。
+  - 暴露问题：图标发布迭代时只关注视觉资源，未守住架构约束，导致打包脚本继续内嵌 `PathBridgeLauncher.app`。
+  - 预防规则：涉及 UI/图标/发布的任何变更，发布前必须执行“架构门禁”检查（`Project.swift` 目标数量、DMG 中 `.app` 数量、`Contents/MacOS` 内是否存在额外 `.app`）。
+
+- 日期：2026-02-28
+  - 用户纠正：图标只能“参考风格”，不能直接照搬第三方应用素材；同时 App 与 Finder 图标必须保持同品牌一致性。
+  - 暴露问题：此前直接映射 Kaku/Go2Shell 资源虽然快速，但品牌独立性和统一性不足。
+  - 预防规则：涉及视觉参考时，默认采用“风格提炼 + 自主重绘”路径，并在 App/Finder 两端共享同一符号系统与色板。
+
+- 日期：2026-02-28
+  - 用户纠正：Finder 工具栏图标与主 App 图标不应强制统一风格，需按场景分开优化（Finder 重识别、App 重质感）。
+  - 暴露问题：此前单脚本单素材覆盖双 target，导致一个场景优化后另一个场景退化。
+  - 预防规则：图标生成链路必须支持 target 级素材路由（App / Launcher 分源），并在每次迭代后分别验证 Finder 工具栏与 Dock 观感。
+
 - 日期：2026-02-28
   - 用户纠正：Finder 工具栏入口图标必须与主应用最新设计保持一致，不能出现 App/Launcher 两套图标漂移。
   - 暴露问题：此前图标生成脚本只覆盖了 `PathBridgeApp`，未同步 `PathBridgeLauncher`，导致 Finder 显示旧图标。

@@ -35,6 +35,14 @@ final class ViewModelTests: XCTestCase {
         XCTAssertFalse(message.isEmpty)
     }
 
+    func test_installGuideManualMessage_doesNotMentionLauncher() {
+        let zhMessage = AppLocalizer.installGuideMessage(language: .zhHans, state: .manualInstallRequired)
+        let enMessage = AppLocalizer.installGuideMessage(language: .en, state: .manualInstallRequired)
+
+        XCTAssertFalse(zhMessage.contains("PathBridgeLauncher"))
+        XCTAssertFalse(enMessage.contains("PathBridgeLauncher"))
+    }
+
     func test_supportResources_existInBundle() {
         XCTAssertNotNil(Bundle.main.url(forResource: "donation-qr-1", withExtension: "JPG"))
         XCTAssertNotNil(Bundle.main.url(forResource: "donation-qr-2", withExtension: "JPG"))

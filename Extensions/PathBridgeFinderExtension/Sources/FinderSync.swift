@@ -6,7 +6,7 @@ import PathBridgeShared
 
 final class FinderSync: FIFinderSync {
     private let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge", category: "finder-extension")
-    private let launcherBundleID = "com.liangzhiyuan.pathbridge.launcher"
+    private let appBundleID = "com.liangzhiyuan.pathbridge"
     private let defaultTerminalMarker = "default-terminal"
 
     override init() {
@@ -63,46 +63,45 @@ final class FinderSync: FIFinderSync {
             "request prepared requestID=\(request.requestID, privacy: .public) terminal=\(request.terminalID, privacy: .public) mode=\(request.mode.rawValue, privacy: .public) pathCount=\(request.paths.count)"
         )
 
-        if openWithLauncher(urls: normalized, requestID: request.requestID) {
-            logger.info("launcher-open dispatched requestID=\(request.requestID, privacy: .public) pathCount=\(normalized.count)")
+        if openWithHostApp(urls: normalized, requestID: request.requestID) {
+            logger.info("host-open dispatched requestID=\(request.requestID, privacy: .public) pathCount=\(normalized.count)")
             return
         }
 
         NSSound.beep()
-        UserToastNotifier.show(title: "PathBridge 暂不支持", body: "未能打开所选终端，请先确认 PathBridgeLauncher 可用")
-        logger.error("launcher-open unavailable requestID=\(request.requestID, privacy: .public)")
+        UserToastNotifier.show(title: "PathBridge 暂不支持", body: "未能打开所选终端，请先确认 PathBridge 可用")
+        logger.error("host-open unavailable requestID=\(request.requestID, privacy: .public)")
     }
 
-    private func openWithLauncher(urls: [URL], requestID: String) -> Bool {
-        guard let launcherURL = resolveLauncherURL() else {
-            logger.error("launcher resolve failed")
+    private func openWithHostApp(urls: [URL], requestID: String) -> Bool {
+        guard let appURL = resolveHostAppURL() else {
+            logger.error("host app resolve failed")
             return false
         }
-        logger.info("launcher resolved path=\(launcherURL.path, privacy: .public)")
+        logger.info("host app resolved path=\(appURL.path, privacy: .public)")
 
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
-        NSWorkspace.shared.open(urls, withApplicationAt: launcherURL, configuration: configuration) { _, error in
+        NSWorkspace.shared.open(urls, withApplicationAt: appURL, configuration: configuration) { _, error in
             if let error {
                 Logger(subsystem: "com.liangzhiyuan.pathbridge", category: "finder-extension")
-                    .error("launcher open completion error requestID=\(requestID, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+                    .error("host app open completion error requestID=\(requestID, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
             }
         }
         return true
     }
 
-    private func resolveLauncherURL() -> URL? {
-        // Prefer launcher bundled inside host app in production builds.
-        let embeddedLauncherURL = Bundle.main.bundleURL
+    private func resolveHostAppURL() -> URL? {
+        let hostAppURL = Bundle.main.bundleURL
             .deletingLastPathComponent() // PlugIns
             .deletingLastPathComponent() // Contents
-            .appendingPathComponent("MacOS/PathBridgeLauncher.app", isDirectory: true)
+            .deletingLastPathComponent() // PathBridgeApp.app
 
-        if FileManager.default.fileExists(atPath: embeddedLauncherURL.path) {
-            return embeddedLauncherURL
+        if FileManager.default.fileExists(atPath: hostAppURL.path) {
+            return hostAppURL
         }
 
-        return NSWorkspace.shared.urlForApplication(withBundleIdentifier: launcherBundleID)
+        return NSWorkspace.shared.urlForApplication(withBundleIdentifier: appBundleID)
     }
 
     private func selectedOrTargetedURLs() -> [URL] {

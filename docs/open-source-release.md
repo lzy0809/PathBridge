@@ -85,6 +85,6 @@ gh release create v0.2.0 \
 ## 5. Release 检查项
 
 - DMG 可挂载，包含且仅包含 `PathBridgeApp.app`
-- `PathBridgeApp.app` 内嵌 `PathBridgeLauncher.app`
+- `PathBridgeApp.app` 不应内嵌额外可执行 App（保持单架构）
 - README 与 Release notes 的安装步骤一致
 - SHA256 文件可用于校验下载完整性

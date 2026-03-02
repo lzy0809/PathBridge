@@ -1,5 +1,40 @@
 # Todo
 
+## 当前任务（2026-03-02，回退到 Go2Shell 单架构）
+- [x] 根因确认：定位“双文件”来源（Launcher 目标 + DMG 内嵌 `PathBridgeLauncher.app` + Finder 入口依赖 Launcher）。
+- [x] 单架构改造：移除 Launcher 运行依赖，Finder 扩展与“一键添加到 Finder”统一指向 `PathBridgeApp.app`。
+- [x] 行为回归：补齐主 App 快开触发（`open urls` / Finder 前台启动与 `reopen`）并保持手动启动进入设置页。
+- [ ] 发布链路修复：更新打包脚本不再构建/嵌入 Launcher，重新打包并发布新版本。
+- [x] 验证与记录：运行测试构建，更新 `tasks/lessons.md` 与 `tasks/todo.md` 回顾。
+
+## 当前任务（2026-03-02，双方案 Icon 评估与发布同步）
+- [x] 回顾 `tasks/lessons.md` 与现有图标/发布链路，完成两套 Icon 的可读性评估并给出结论（选择 v2 全套）。
+- [x] 选择单一方案并替换 App/Launcher 全量 `AppIcon.appiconset` 资源（16~1024）。
+- [x] 运行构建验证（`PathBridgeApp` 测试 + `PathBridgeLauncher` 构建）确认资源接入有效。
+- [x] 运行发布链路（GitHub Release + Homebrew Cask 更新）并记录版本、产物与摘要。
+
+## 当前任务（2026-02-28，原创统一风格图标重设计）
+- [x] 基于 Bridge Tile + 青灰色系重做 PathBridge 品牌图标语言，避免直接映射第三方图标素材。
+- [x] 采用同品牌双变体：`PathBridgeApp`（完整材质）与 `PathBridgeLauncher`（Finder 小尺寸高识别）。
+- [x] 重写图标生成脚本为纯代码绘制（路径符号 + 轻金属质感 + 透明外边距）。
+- [x] 重新生成两套 `AppIcon.appiconset` 并完成 App/Launcher 构建验证。
+
+## 当前任务（2026-02-28，双图标策略：App vs Finder）
+- [x] 拆分图标策略：`PathBridgeApp` 对齐 Kaku 风格（透明外边距 + 轻质感主体），`PathBridgeLauncher` 对齐 Go2Shell Finder 工具栏风格（小尺寸识别优先）。
+- [x] 改造图标生成脚本，支持按 target 使用不同参考源，避免 App/Launcher 被同一素材覆盖。
+- [x] 重新生成两套 `AppIcon.appiconset` 并执行本地构建验证。
+- [x] 给出 26 系统观感预期与是否需要重打 DMG 的建议。
+
+## 当前任务（2026-02-28，图标质感回退）
+- [x] 定位“金属纹理丢失”原因：图标生成脚本切换为扁平手绘路径导致。
+- [x] 恢复参考图纹理渲染逻辑，并同步生成 App/Launcher 全尺寸图标。
+- [x] 本地构建验证图标资源可正常编译进 `PathBridgeApp` 产物。
+
+## 当前任务（2026-02-28，macOS 26 图标加壳适配）
+- [x] 重做图标为“透明外层 + 单主体卡片”，避免 macOS 26 出现双层背景观感。
+- [x] 同步生成 App/Launcher 全尺寸图标并校验一致性。
+- [x] 本地构建验证图标资源已编译进产物（不改功能逻辑）。
+
 ## 当前任务（2026-02-28，图标基线切换）
 - [x] 将 App/Launcher 图标切换为 `build/design/reference` 基线样式。
 - [x] 同步生成 AppIcon 全尺寸资源并验证两端一致。
@@ -177,6 +212,9 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：按用户纠正回退到 Go2Shell 单架构。已移除 `PathBridgeLauncher` 目标与资源，Finder 扩展与“添加到 Finder”统一指向 `PathBridgeApp`，打包脚本不再内嵌第二个 App；验证 `PathBridge_v0.2.2.dmg` 仅包含 `PathBridgeApp.app` 且 `Contents/MacOS` 无嵌套 `.app`（SHA256：`f1d97f04643ff455842967fc7f35926c79a23db61c38d0265a21d7d17c0c8f31`）。
+- 已完成：图标方案评估选择 v2（文件夹轮廓语义更清晰，App/Finder 语言一致）；已替换两端 `AppIcon` 全尺寸资源并发布 `v0.2.1`。GitHub Release: `https://github.com/lzy0809/PathBridge/releases/tag/v0.2.1`，DMG: `build/release/dmg/PathBridge_v0.2.1.dmg`，SHA256: `4de9306637d30defc58ee885f90af3326b20eb0cd61a2636f6f0ab5cebc37eb3`。
+- 已完成：macOS 26 图标适配。去掉外层玻璃框，改为透明外层+单主体卡片，降低系统自动加壳后的双层背景观感；App/Launcher 图标全尺寸已同步并构建验证通过。
 - 已完成：按用户指令切回 `build/design/reference` 图标基线，并通过脚本生成 App/Launcher 全尺寸资源；两端图标逐项比对一致。
 - 已完成：图标按确认的 M2 方向重绘并正式应用到 App/Launcher（保留系统感外框、内卡片更干净、`^_^` 中对比），两端全尺寸资源已同步。
 - 已完成：DMG 默认命名改为 `PathBridge_v<version>.dmg`，版本号默认读取 `CFBundleShortVersionString`，并支持 `APP_VERSION` / `DMG_NAME` 覆盖。
