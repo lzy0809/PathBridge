@@ -1,5 +1,11 @@
 # Todo
 
+## 当前任务（2026-03-02，对齐 Go2Shell 自动添加 Finder 入口）
+- [x] 对比 `/Applications/Go2Shell.app` 二进制与当前实现，确认“空工具栏配置时自动初始化”差异。
+- [x] 修复 `FinderToolbarInstaller`：`TB Item Identifiers` 为空时使用 Go2Shell 同款默认模板（`BACK/SWCH/ACTN/ARNG/SHAR/LABL/SRCH`）再插入 PathBridge 入口。
+- [x] 新增回归测试，覆盖“空配置走默认模板”和“已有配置优先保留”两条路径。
+- [x] 运行 `PathBridgeApp` 全测试回归，确认无行为退化。
+
 ## 当前任务（2026-02-28，图标基线切换）
 - [x] 将 App/Launcher 图标切换为 `build/design/reference` 基线样式。
 - [x] 同步生成 AppIcon 全尺寸资源并验证两端一致。

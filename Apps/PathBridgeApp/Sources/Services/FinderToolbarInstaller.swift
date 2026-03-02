@@ -16,6 +16,15 @@ final class FinderToolbarInstaller {
     private let toolbarPlistsKey = "TB Item Plists"
     private let finderSearchIdentifier = "com.apple.finder.SRCH"
     private let finderLocationIdentifier = "com.apple.finder.loc "
+    private let finderDefaultIdentifiers = [
+        "com.apple.finder.BACK",
+        "com.apple.finder.SWCH",
+        "com.apple.finder.ACTN",
+        "com.apple.finder.ARNG",
+        "com.apple.finder.SHAR",
+        "com.apple.finder.LABL",
+        "com.apple.finder.SRCH",
+    ]
     private let launcherBundleID = "com.liangzhiyuan.pathbridge.launcher"
 
     func install() -> FinderToolbarInstallResult {
@@ -71,9 +80,9 @@ final class FinderToolbarInstaller {
         var finderPrefs = UserDefaults.standard.persistentDomain(forName: finderDomain) ?? [:]
         var toolbar = finderPrefs[toolbarKey] as? [String: Any] ?? [:]
 
-        let existingIdentifiers = (toolbar[toolbarItemsKey] as? [Any] ?? []).compactMap { $0 as? String }
-        guard !existingIdentifiers.isEmpty else {
-            logger.error("toolbar update failed reason=missing-item-identifiers")
+        let existingIdentifiers = normalizedIdentifiers(from: toolbar)
+        if existingIdentifiers.isEmpty {
+            logger.error("toolbar update failed reason=empty-identifiers-after-normalization")
             return false
         }
 
@@ -106,6 +115,15 @@ final class FinderToolbarInstaller {
         let synced = CFPreferencesAppSynchronize(finderDomain as CFString)
         logger.info("toolbar update synced=\(synced, privacy: .public)")
         return synced
+    }
+
+    func normalizedIdentifiers(from toolbar: [String: Any]) -> [String] {
+        let existingIdentifiers = (toolbar[toolbarItemsKey] as? [Any] ?? []).compactMap { $0 as? String }
+        guard !existingIdentifiers.isEmpty else {
+            logger.info("toolbar identifiers missing, initialized from default template")
+            return finderDefaultIdentifiers
+        }
+        return existingIdentifiers
     }
 
     private func makeLauncherToolbarItemPlist(launcherURL: URL) -> [String: Any] {

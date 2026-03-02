@@ -1,5 +1,10 @@
 # Lessons Learned
 
+- 日期：2026-03-02
+  - 用户纠正：目标行为必须与 Go2Shell 一致，点击“一键添加”应自动落到 Finder 工具栏，不应默认回退手动拖拽。
+  - 暴露问题：`FinderToolbarInstaller` 在 `TB Item Identifiers` 为空时直接失败，而新系统/未定制 Finder 工具栏正是该状态。
+  - 预防规则：对 Finder 工具栏偏好写入时，必须兼容“空配置首次初始化”场景，提供默认模板后再插入自定义入口。
+
 - 日期：2026-02-28
   - 用户纠正：Finder 工具栏入口图标必须与主应用最新设计保持一致，不能出现 App/Launcher 两套图标漂移。
   - 暴露问题：此前图标生成脚本只覆盖了 `PathBridgeApp`，未同步 `PathBridgeLauncher`，导致 Finder 显示旧图标。

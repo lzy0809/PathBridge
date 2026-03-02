@@ -35,6 +35,35 @@ final class ViewModelTests: XCTestCase {
         XCTAssertFalse(message.isEmpty)
     }
 
+    func test_finderToolbarInstaller_usesFinderDefaultTemplateWhenIdentifiersMissing() {
+        let installer = FinderToolbarInstaller()
+
+        let identifiers = installer.normalizedIdentifiers(from: [:])
+
+        XCTAssertEqual(
+            identifiers,
+            [
+                "com.apple.finder.BACK",
+                "com.apple.finder.SWCH",
+                "com.apple.finder.ACTN",
+                "com.apple.finder.ARNG",
+                "com.apple.finder.SHAR",
+                "com.apple.finder.LABL",
+                "com.apple.finder.SRCH",
+            ]
+        )
+    }
+
+    func test_finderToolbarInstaller_prefersExistingIdentifiers() {
+        let installer = FinderToolbarInstaller()
+
+        let identifiers = installer.normalizedIdentifiers(
+            from: ["TB Item Identifiers": ["com.apple.finder.BACK", "com.apple.finder.SRCH"]]
+        )
+
+        XCTAssertEqual(identifiers, ["com.apple.finder.BACK", "com.apple.finder.SRCH"])
+    }
+
     func test_supportResources_existInBundle() {
         XCTAssertNotNil(Bundle.main.url(forResource: "donation-qr-1", withExtension: "JPG"))
         XCTAssertNotNil(Bundle.main.url(forResource: "donation-qr-2", withExtension: "JPG"))
