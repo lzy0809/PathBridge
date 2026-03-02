@@ -4,7 +4,7 @@
 - [x] 根因确认：定位“双文件”来源（Launcher 目标 + DMG 内嵌 `PathBridgeLauncher.app` + Finder 入口依赖 Launcher）。
 - [x] 单架构改造：移除 Launcher 运行依赖，Finder 扩展与“一键添加到 Finder”统一指向 `PathBridgeApp.app`。
 - [x] 行为回归：补齐主 App 快开触发（`open urls` / Finder 前台启动与 `reopen`）并保持手动启动进入设置页。
-- [ ] 发布链路修复：更新打包脚本不再构建/嵌入 Launcher，重新打包并发布新版本。
+- [x] 发布链路修复：更新打包脚本不再构建/嵌入 Launcher，重新打包并发布新版本（`v0.2.2`）。
 - [x] 验证与记录：运行测试构建，更新 `tasks/lessons.md` 与 `tasks/todo.md` 回顾。
 
 ## 当前任务（2026-03-02，双方案 Icon 评估与发布同步）
