@@ -3,8 +3,8 @@
 ## 当前任务（2026-03-02，发布自动添加修复版 DMG 并同步 Homebrew）
 - [x] 版本升级到 `0.2.4`（包含 Go2Shell 自动添加 Finder 入口修复）。
 - [x] 回归验证：`PathBridgeApp` 全测试通过。
-- [ ] 生成签名+公证 DMG：`PathBridge_v0.2.4.dmg`。
-- [ ] 同步 GitHub Release `v0.2.4` 与 Homebrew cask。
+- [x] 生成签名+公证 DMG：`PathBridge_v0.2.4.dmg`。
+- [x] 同步 GitHub Release `v0.2.4` 与 Homebrew cask。
 
 ## 当前任务（2026-03-02，对齐 Go2Shell 自动添加 Finder 入口）
 - [x] 对比 `/Applications/Go2Shell.app` 二进制与当前实现，确认“空工具栏配置时自动初始化”差异。
@@ -189,6 +189,7 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：发布 `v0.2.4`（Go2Shell 自动添加 Finder 入口修复）。GitHub Release：`https://github.com/lzy0809/PathBridge/releases/tag/v0.2.4`；DMG：`build/release/dmg/PathBridge_v0.2.4.dmg`；SHA256：`8afe226b2e04e8db1f5af3df044067e7ed5da67cde8a50da378d5659bdc0120d`；Homebrew tap 提交：`c9d6f86`。
 - 已完成：按用户指令切回 `build/design/reference` 图标基线，并通过脚本生成 App/Launcher 全尺寸资源；两端图标逐项比对一致。
 - 已完成：图标按确认的 M2 方向重绘并正式应用到 App/Launcher（保留系统感外框、内卡片更干净、`^_^` 中对比），两端全尺寸资源已同步。
 - 已完成：DMG 默认命名改为 `PathBridge_v<version>.dmg`，版本号默认读取 `CFBundleShortVersionString`，并支持 `APP_VERSION` / `DMG_NAME` 覆盖。
