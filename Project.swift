@@ -25,8 +25,8 @@ let project = Project(
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "PathBridge",
-                "CFBundleShortVersionString": "0.2.0",
-                "CFBundleVersion": "2",
+                "CFBundleShortVersionString": "0.2.4",
+                "CFBundleVersion": "6",
                 "NSAppleEventsUsageDescription": "PathBridge needs Finder automation permission to read the current Finder folder and open it in your selected terminal.",
             ]),
             sources: ["Apps/PathBridgeApp/Sources/**"],
@@ -52,8 +52,8 @@ let project = Project(
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "PathBridge Launcher",
-                "CFBundleShortVersionString": "0.2.0",
-                "CFBundleVersion": "2",
+                "CFBundleShortVersionString": "0.2.4",
+                "CFBundleVersion": "6",
                 "LSUIElement": true,
                 "NSAppleEventsUsageDescription": "PathBridge Launcher needs access to Finder to read current directory and open terminal.",
             ]),
@@ -80,8 +80,8 @@ let project = Project(
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "PathBridge Finder Extension",
-                "CFBundleShortVersionString": "0.2.0",
-                "CFBundleVersion": "2",
+                "CFBundleShortVersionString": "0.2.4",
+                "CFBundleVersion": "6",
                 "NSExtension": [
                     "NSExtensionAttributes": [
                         "UIDisplayName": "PathBridge Finder Extension",

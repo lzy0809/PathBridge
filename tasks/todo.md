@@ -1,5 +1,11 @@
 # Todo
 
+## 当前任务（2026-03-02，发布自动添加修复版 DMG 并同步 Homebrew）
+- [x] 版本升级到 `0.2.4`（包含 Go2Shell 自动添加 Finder 入口修复）。
+- [x] 回归验证：`PathBridgeApp` 全测试通过。
+- [ ] 生成签名+公证 DMG：`PathBridge_v0.2.4.dmg`。
+- [ ] 同步 GitHub Release `v0.2.4` 与 Homebrew cask。
+
 ## 当前任务（2026-03-02，对齐 Go2Shell 自动添加 Finder 入口）
 - [x] 对比 `/Applications/Go2Shell.app` 二进制与当前实现，确认“空工具栏配置时自动初始化”差异。
 - [x] 修复 `FinderToolbarInstaller`：`TB Item Identifiers` 为空时使用 Go2Shell 同款默认模板（`BACK/SWCH/ACTN/ARNG/SHAR/LABL/SRCH`）再插入 PathBridge 入口。
