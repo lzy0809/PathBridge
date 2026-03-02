@@ -1,5 +1,13 @@
 # Todo
 
+## 当前任务（2026-03-02，Go2Shell 架构回归与发布修复）
+- [x] 先分析再改：对比 `/Applications/Go2Shell.app/Contents` 与当前包结构，确认目标为“单 DMG 单 App + App 内嵌 Helper”。
+- [x] 修复安装引导文案：默认引导改为“自动添加 Finder”，失败文案不暴露 `PathBridgeLauncher` 实现细节。
+- [x] 修复 Finder 工具栏 icon 偏小：提升 Launcher 图标有效占比并固化为 App/Launcher 分源生成脚本。
+- [x] 回归验证：`PathBridgeApp` 测试通过，`PathBridgeLauncher` 构建通过，`PathBridgeFinderExtension` target 构建通过。
+- [x] 发布链路修复：使用 Developer ID 签名 + Notary 公证生成 `PathBridge_v0.2.3.dmg`，并验证 Gatekeeper 接受。
+- [ ] 推送发布：同步 GitHub Release 与 Homebrew cask 到 `0.2.3`。
+
 ## 当前任务（2026-03-02，回退到 Go2Shell 单架构）
 - [x] 根因确认：定位“双文件”来源（Launcher 目标 + DMG 内嵌 `PathBridgeLauncher.app` + Finder 入口依赖 Launcher）。
 - [x] 单架构改造：移除 Launcher 运行依赖，Finder 扩展与“一键添加到 Finder”统一指向 `PathBridgeApp.app`。

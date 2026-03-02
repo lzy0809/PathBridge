@@ -40,7 +40,7 @@ Its core goal is one click in Finder toolbar to open the current folder in your 
 
 - 点击 Finder 工具栏 PathBridge 图标会直接打开终端，不会弹设置窗口。
 - 从 Launchpad/Dock 启动 PathBridge，会打开设置界面。
-- 若遇到 Finder 自动化权限提示，请在系统设置中允许 PathBridge 控制 Finder。
+- 若遇到 Finder 自动化权限提示，请在系统设置中允许 PathBridge/PathBridgeLauncher 控制 Finder。
 
 ## 开发环境
 
@@ -52,7 +52,8 @@ open PathBridge.xcworkspace
 
 推荐使用 scheme：
 
-- `PathBridgeApp`（主设置界面 + Finder 工具栏直开联调）
+- `PathBridgeApp`（主设置界面 + 联调）
+- `PathBridgeLauncher`（Finder 工具栏执行体联调）
 
 ## 本地打包 DMG
 
@@ -81,13 +82,14 @@ brew install --cask pathbridge
 
 ```bash
 scripts/release/publish_open_source.sh \
-  --version 0.2.0 \
-  --dmg build/release/dmg/PathBridge_v0.2.0.dmg
+  --version 0.2.3 \
+  --dmg build/release/dmg/PathBridge_v0.2.3.dmg
 ```
 
 ## 架构概览
 
-- `PathBridgeApp`：设置 UI + Finder 工具栏直开执行体（单架构）
+- `PathBridgeApp`：设置 UI 与安装引导
+- `PathBridgeLauncher`：无 Dock 的工具栏执行体（LSUIElement）
 - `Packages/TerminalAdapters`：终端适配层
 - `Packages/Core`：路径归一化等核心逻辑
 - `Packages/Shared`：设置模型、通知、通用组件

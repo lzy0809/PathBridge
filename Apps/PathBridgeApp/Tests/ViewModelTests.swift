@@ -35,6 +35,14 @@ final class ViewModelTests: XCTestCase {
         XCTAssertFalse(message.isEmpty)
     }
 
+    func test_defaultInstallGuideMessage_doesNotRequireManualDrag() {
+        let zhMessage = AppLocalizer.installGuideMessage(language: .zhHans, state: .defaultGuide)
+        let enMessage = AppLocalizer.installGuideMessage(language: .en, state: .defaultGuide)
+
+        XCTAssertFalse(zhMessage.contains("拖"))
+        XCTAssertFalse(enMessage.localizedCaseInsensitiveContains("drag"))
+    }
+
     func test_installGuideManualMessage_doesNotMentionLauncher() {
         let zhMessage = AppLocalizer.installGuideMessage(language: .zhHans, state: .manualInstallRequired)
         let enMessage = AppLocalizer.installGuideMessage(language: .en, state: .manualInstallRequired)

@@ -25,8 +25,8 @@ let project = Project(
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "PathBridge",
-                "CFBundleShortVersionString": "0.2.2",
-                "CFBundleVersion": "4",
+                "CFBundleShortVersionString": "0.2.3",
+                "CFBundleVersion": "5",
                 "NSAppleEventsUsageDescription": "PathBridge needs Finder automation permission to read the current Finder folder and open it in your selected terminal.",
             ]),
             sources: ["Apps/PathBridgeApp/Sources/**"],
@@ -45,6 +45,34 @@ let project = Project(
             )
         ),
         .target(
+            name: "PathBridgeLauncher",
+            destinations: .macOS,
+            product: .app,
+            bundleId: "\(organization).pathbridge.launcher",
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "PathBridge Launcher",
+                "CFBundleShortVersionString": "0.2.3",
+                "CFBundleVersion": "5",
+                "LSUIElement": true,
+                "NSAppleEventsUsageDescription": "PathBridge Launcher needs access to Finder to read current directory and open terminal.",
+            ]),
+            sources: ["Apps/PathBridgeLauncher/Sources/**"],
+            resources: ["Apps/PathBridgeLauncher/Resources/**"],
+            dependencies: [
+                .target(name: "PathBridgeCore"),
+                .target(name: "PathBridgeShared"),
+                .target(name: "PathBridgeTerminalAdapters"),
+            ],
+            settings: .settings(
+                base: [
+                    "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+                    "CODE_SIGN_ENTITLEMENTS": "Apps/PathBridgeLauncher/PathBridgeLauncher.entitlements",
+                    "DEVELOPMENT_TEAM": "6K9FQJ7SA2",
+                ]
+            )
+        ),
+        .target(
             name: "PathBridgeFinderExtension",
             destinations: .macOS,
             product: .appExtension,
@@ -52,8 +80,8 @@ let project = Project(
             deploymentTargets: .macOS("14.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "PathBridge Finder Extension",
-                "CFBundleShortVersionString": "0.2.2",
-                "CFBundleVersion": "4",
+                "CFBundleShortVersionString": "0.2.3",
+                "CFBundleVersion": "5",
                 "NSExtension": [
                     "NSExtensionAttributes": [
                         "UIDisplayName": "PathBridge Finder Extension",
@@ -176,6 +204,15 @@ let project = Project(
             runAction: .runAction(configuration: .debug, executable: "PathBridgeApp"),
             archiveAction: .archiveAction(configuration: .release),
             profileAction: .profileAction(configuration: .release, executable: "PathBridgeApp"),
+            analyzeAction: .analyzeAction(configuration: .debug)
+        ),
+        .scheme(
+            name: "PathBridgeLauncher",
+            shared: true,
+            buildAction: .buildAction(targets: ["PathBridgeLauncher"]),
+            runAction: .runAction(configuration: .debug, executable: "PathBridgeLauncher"),
+            archiveAction: .archiveAction(configuration: .release),
+            profileAction: .profileAction(configuration: .release, executable: "PathBridgeLauncher"),
             analyzeAction: .analyzeAction(configuration: .debug)
         ),
     ]
