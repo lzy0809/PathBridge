@@ -1,6 +1,11 @@
 # Lessons Learned
 
 - 日期：2026-03-20
+  - 实施纠正：在 Tuist 工程里新增 `Sources/**` / `Tests/**` 下的新文件后，现有 `PathBridge.xcodeproj` 不会自动感知，直接 `xcodebuild` 会出现“符号不存在/文件不在 target 中”的假象。
+  - 暴露问题：这次新增 `WindowOffsetStrategy.swift`、`WindowAccessibilityController.swift` 后，先跑测试得到 `Cannot find 'WindowOffsetStrategy' in scope`，根因不是代码没生效，而是忘了重新 `tuist generate`。
+  - 预防规则：只要新增或删除了被 Tuist glob 管理的源码/测试文件，就先执行一次 `tuist generate`，再进入 `xcodebuild` 验证阶段。
+
+- 日期：2026-03-20
   - 用户纠正：本机其实已经安装可用的 `Developer ID Application` 证书与 GitHub 凭据，不能因为一次受限环境下的探测结果就断言“没有证书/不能发布”。
   - 暴露问题：此前在沙箱受限阶段直接依据 `security find-identity` 与 `gh auth status` 的局部结果下结论，未在完整权限环境下复核 login keychain、notary profile 与 keyring 登录状态。
   - 预防规则：发布阻塞判断必须在最终执行环境下复核三项：`security find-identity -v -p codesigning`、`xcrun notarytool history --keychain-profile <profile>`、`gh auth status`；任一项未复核前，不要对“证书缺失/无法发布”下最终结论。

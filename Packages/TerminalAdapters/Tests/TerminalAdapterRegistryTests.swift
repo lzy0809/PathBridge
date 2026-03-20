@@ -5,7 +5,80 @@ import XCTest
 
 @MainActor
 final class TerminalAdapterRegistryTests: XCTestCase {
-    func test_kakuLaunchStrategies_newWindow_forGUIStartCommand() {
+    func test_iTerm2AppleScript_newWindow_usesCreateWindowAndOffsetBounds() {
+        let script = ITerm2Adapter.makeAppleScript(
+            mode: .newWindow,
+            cwd: URL(fileURLWithPath: "/tmp/project", isDirectory: true),
+            targetFrame: CGRect(x: 128, y: 148, width: 900, height: 620)
+        )
+
+        XCTAssertTrue(script.contains("create window with default profile"))
+        XCTAssertTrue(script.contains("cd '/tmp/project'"))
+        XCTAssertTrue(script.contains("set bounds of newWindow to {128, 148, 1028, 768}"))
+        XCTAssertTrue(script.contains("activate"))
+    }
+
+    func test_iTerm2AppleScript_newTab_usesCurrentWindow() {
+        let script = ITerm2Adapter.makeAppleScript(
+            mode: .newTab,
+            cwd: URL(fileURLWithPath: "/tmp/project", isDirectory: true),
+            targetFrame: nil
+        )
+
+        XCTAssertTrue(script.contains("tell current window"))
+        XCTAssertTrue(script.contains("create tab with default profile"))
+        XCTAssertFalse(script.contains("set bounds of newWindow"))
+    }
+
+    func test_windowOffset_offsetsFrameByDefaultDelta() {
+        let frame = WindowOffsetStrategy.offset(
+            frame: CGRect(x: 100, y: 120, width: 900, height: 620)
+        )
+
+        XCTAssertEqual(frame, CGRect(x: 128, y: 148, width: 900, height: 620))
+    }
+
+    func test_kakuLaunchProfileOrder_prefersCliSpawnWhenApplicationAlreadyRunning() {
+        let profiles = KakuAdapter.prioritizeLaunchProfiles(
+            [
+                .init(
+                    executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+                    commandStyle: .start,
+                    supportsNewTab: true
+                ),
+                .init(
+                    executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku",
+                    commandStyle: .cliSpawn,
+                    supportsNewTab: false
+                ),
+            ],
+            prefersExistingInstance: true
+        )
+
+        XCTAssertEqual(profiles.map(\.commandStyle), [.cliSpawn, .start])
+    }
+
+    func test_kakuLaunchProfileOrder_prefersGUIStartWhenApplicationNotRunning() {
+        let profiles = KakuAdapter.prioritizeLaunchProfiles(
+            [
+                .init(
+                    executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku",
+                    commandStyle: .cliSpawn,
+                    supportsNewTab: false
+                ),
+                .init(
+                    executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+                    commandStyle: .start,
+                    supportsNewTab: true
+                ),
+            ],
+            prefersExistingInstance: false
+        )
+
+        XCTAssertEqual(profiles.map(\.commandStyle), [.start, .cliSpawn])
+    }
+
+    func test_kakuLaunchStrategies_newWindow_forGUIStartCommand_whenNoExistingInstance() {
         let args = KakuAdapter.makeLaunchStrategies(
             profile: .init(
                 executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
@@ -15,12 +88,7 @@ final class TerminalAdapterRegistryTests: XCTestCase {
             mode: .newWindow,
             cwd: URL(fileURLWithPath: "/tmp", isDirectory: true)
         )
-        XCTAssertEqual(
-            args,
-            [
-                ["start", "--cwd", "/tmp"],
-            ]
-        )
+        XCTAssertEqual(args, [["start", "--cwd", "/tmp"]])
     }
 
     func test_kakuLaunchStrategies_newTab_forGUIStartCommand() {

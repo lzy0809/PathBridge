@@ -38,12 +38,16 @@ public struct KakuAdapter: TerminalAdapter {
         }
 
         var didLaunch = false
+        var prefersExistingInstance = isKakuRunning()
         for path in paths {
             var launched = false
             var lastError: Error?
             var attempt = 0
+            let previousFrame = mode == .newWindow
+                ? bundleIdentifier.flatMap { WindowAccessibilityController.focusedWindowFrame(bundleIdentifier: $0) }
+                : nil
 
-            for profile in launchProfiles {
+            for profile in Self.prioritizeLaunchProfiles(launchProfiles, prefersExistingInstance: prefersExistingInstance) {
                 let strategies = Self.makeLaunchStrategies(profile: profile, mode: mode, cwd: path)
                 for arguments in strategies {
                     attempt += 1
@@ -72,10 +76,34 @@ public struct KakuAdapter: TerminalAdapter {
             guard launched else {
                 throw lastError ?? AdapterLaunchError.processStartFailed("Kaku launch failed")
             }
+
+            prefersExistingInstance = true
+
+            if mode == .newWindow,
+               let bundleIdentifier,
+               let previousFrame
+            {
+                let targetFrame = WindowOffsetStrategy.offset(frame: previousFrame)
+                _ = WindowAccessibilityController.moveFocusedWindow(
+                    bundleIdentifier: bundleIdentifier,
+                    to: targetFrame,
+                    promptForTrust: true
+                )
+            }
         }
 
         if didLaunch {
             activateKaku()
+        }
+    }
+
+    static func prioritizeLaunchProfiles(
+        _ profiles: [KakuLaunchProfile],
+        prefersExistingInstance: Bool
+    ) -> [KakuLaunchProfile] {
+        profiles.sorted { lhs, rhs in
+            priority(for: lhs.commandStyle, prefersExistingInstance: prefersExistingInstance)
+                < priority(for: rhs.commandStyle, prefersExistingInstance: prefersExistingInstance)
         }
     }
 
@@ -111,6 +139,15 @@ public struct KakuAdapter: TerminalAdapter {
                     ["cli", "spawn"] + cwdArguments,
                 ]
             }
+        }
+    }
+
+    private static func priority(for style: KakuCommandStyle, prefersExistingInstance: Bool) -> Int {
+        switch (prefersExistingInstance, style) {
+        case (true, .cliSpawn), (false, .start):
+            return 0
+        case (true, .start), (false, .cliSpawn):
+            return 1
         }
     }
 
@@ -300,6 +337,13 @@ public struct KakuAdapter: TerminalAdapter {
         }
 
         Self.logger.error("kaku activate skipped reason=running-application-not-found")
+    }
+
+    private func isKakuRunning() -> Bool {
+        guard let bundleIdentifier else {
+            return false
+        }
+        return !NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).isEmpty
     }
 
     private static func looksLikeFailureOutput(_ output: String) -> Bool {

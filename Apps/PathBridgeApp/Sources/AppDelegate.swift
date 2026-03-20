@@ -32,6 +32,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
+    }
+
     @objc
     private func handleWindowBecameMain(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else {

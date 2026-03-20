@@ -5,6 +5,12 @@ import XCTest
 
 @MainActor
 final class ViewModelTests: XCTestCase {
+    func test_appDelegate_terminatesAfterLastWindowClosed() {
+        let delegate = AppDelegate()
+
+        XCTAssertTrue(delegate.applicationShouldTerminateAfterLastWindowClosed(NSApp))
+    }
+
     func test_settingsViewModel_loadsDefaults() {
         let suiteName = "SettingsViewModelTests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
