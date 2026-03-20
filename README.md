@@ -67,11 +67,11 @@ scripts/release/make_dmg.sh
 
 - `docs/signing-and-dmg.md`
 
-## Homebrew 安装（规划）
+## Homebrew 安装
 
-计划通过自定义 tap 分发：`lzy0809/homebrew-tap`
+通过自定义 tap 分发：`lzy0809/homebrew-tap`
 
-未来安装命令：
+安装命令：
 
 ```bash
 brew tap lzy0809/tap
