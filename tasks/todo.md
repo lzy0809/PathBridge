@@ -1,11 +1,11 @@
 # Todo
 
 ## 当前任务（2026-03-20，发布终端单实例与窗口偏移修复版）
-- [ ] 回顾当前工作区、版本号、签名/公证/GitHub 凭据，确认可以直接发布给用户验证。
-- [ ] 升级版本号并生成正式签名 + 公证 DMG。
-- [ ] 提交当前修复、创建发布 tag，并同步源码远端。
-- [ ] 上传 GitHub Release 资产并更新 Homebrew tap。
-- [ ] 在回顾区记录发布结果、校验命令与剩余人工验证项。
+- [x] 回顾当前工作区、版本号、签名/公证/GitHub 凭据，确认可以直接发布给用户验证。
+- [x] 升级版本号并生成正式签名 + 公证 DMG。
+- [x] 提交当前修复、创建发布 tag，并同步源码远端。
+- [x] 上传 GitHub Release 资产并更新 Homebrew tap。
+- [x] 在回顾区记录发布结果、校验命令与剩余人工验证项。
 
 ## 当前任务（2026-03-20，终端单实例复用、窗口偏移与关窗退出）
 - [x] 回顾 Go2Shell、本机终端脚本能力与当前实现，冻结“单实例复用 + 新窗偏移 + 关窗退出”设计。
@@ -219,6 +219,7 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：正式发布 `v0.2.6`（终端单实例复用、窗口偏移与关窗退出修复）。发布代码 commit：`cb499e2`；tag：`v0.2.6`；GitHub Release：`https://github.com/lzy0809/PathBridge/releases/tag/v0.2.6`；正式 DMG：`build/release/dmg/PathBridge_v0.2.6.dmg`；SHA256：`7ef4ec89359f407d722b81cd27182a68b6253003d92f9d323777334d81ccc3a2`；Apple notarization submission：`acd2f845-0e9a-4169-99e6-3c5042b08400`，状态 `Accepted`；Homebrew tap 提交：`cb194d6`。验证：`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-terminal-fix-4 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-app-close-4 -only-testing:PathBridgeAppTests/ViewModelTests/test_appDelegate_terminatesAfterLastWindowClosed` 通过；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData-terminal-fix` 通过；`codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app`、`spctl --assess --type open --context context:primary-signature -v build/release/dmg/PathBridge_v0.2.6.dmg` 均通过。剩余人工项：在目标机器上授予辅助功能权限后，实机确认 Kaku 新窗偏移与单 Dock 实例体验是否符合预期。
 - 已完成：终端单实例复用、窗口偏移与关窗退出修复。`ITerm2Adapter` 不再走 `open -n`，改为 AppleScript 控制已有 iTerm2 实例创建新窗口/新标签，并在新窗口模式下基于上一个窗口位置做偏移；`KakuAdapter` 改为“运行中优先 `cli spawn`，未运行优先 `start`”，补充前置激活与基于辅助功能接口的窗口偏移；`AppDelegate` 增加 `applicationShouldTerminateAfterLastWindowClosed`，点红色关闭按钮后直接退出 PathBridge。验证：`tuist generate` 成功；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-terminal-fix-4 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-app-close-4 -only-testing:PathBridgeAppTests/ViewModelTests/test_appDelegate_terminatesAfterLastWindowClosed` 通过；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData-terminal-fix` 通过。剩余人工项：在目标机器上授予辅助功能权限后，实机确认 Kaku 新窗是否按偏移出现，以及 Dock 是否只保留单个实例图标。
 - 已完成：正式发布 `v0.2.5`（Kaku Finder 快开体验修复）。源码 commit：`e793f25`；tag：`v0.2.5`；GitHub Release：`https://github.com/lzy0809/PathBridge/releases/tag/v0.2.5`；正式 DMG：`build/release/dmg/PathBridge_v0.2.5.dmg`；SHA256：`7cab4ded24e9765d31a2bb16beec6e6f011b245b0f9ef7e3fd41a370ddd37e23`；验证：`codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app` 通过、`spctl --assess --type open --context context:primary-signature -v build/release/dmg/PathBridge_v0.2.5.dmg` 返回 `source=Notarized Developer ID`；Apple notarization submission `22b2c0e2-376f-40fd-97fe-142637e1deb9` 已 `Accepted`；Homebrew tap 提交：`a4866b3`。
 - 已完成：Kaku Finder 快开体验修复。`KakuAdapter` 改为优先探测并使用 `kaku-gui start --cwd`，旧版 `kaku cli spawn` 退为兼容路径，默认不再走 `--always-new-process`；启动成功后会显式激活 Kaku 窗口。回归验证：`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData -only-testing:PathBridgeTerminalAdaptersTests` 通过；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData` 通过。剩余人工项：需在 Finder 工具栏里实机点一次 Kaku，确认 Tahoe 上窗口确实前置、Dock 不再累积多实例图标。
