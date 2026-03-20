@@ -1,5 +1,10 @@
 # Lessons Learned
 
+- 日期：2026-03-20
+  - 用户纠正：本机其实已经安装可用的 `Developer ID Application` 证书与 GitHub 凭据，不能因为一次受限环境下的探测结果就断言“没有证书/不能发布”。
+  - 暴露问题：此前在沙箱受限阶段直接依据 `security find-identity` 与 `gh auth status` 的局部结果下结论，未在完整权限环境下复核 login keychain、notary profile 与 keyring 登录状态。
+  - 预防规则：发布阻塞判断必须在最终执行环境下复核三项：`security find-identity -v -p codesigning`、`xcrun notarytool history --keychain-profile <profile>`、`gh auth status`；任一项未复核前，不要对“证书缺失/无法发布”下最终结论。
+
 - 日期：2026-03-02
   - 用户纠正：目标行为必须与 Go2Shell 一致，点击“一键添加”应自动落到 Finder 工具栏，不应默认回退手动拖拽。
   - 暴露问题：`FinderToolbarInstaller` 在 `TB Item Identifiers` 为空时直接失败，而新系统/未定制 Finder 工具栏正是该状态。
