@@ -5,27 +5,125 @@ import XCTest
 
 @MainActor
 final class TerminalAdapterRegistryTests: XCTestCase {
-    func test_kakuLaunchStrategies_newWindow() {
-        let args = KakuAdapter.makeLaunchStrategies(mode: .newWindow, cwd: URL(fileURLWithPath: "/tmp", isDirectory: true))
+    func test_kakuLaunchStrategies_newWindow_forGUIStartCommand() {
+        let args = KakuAdapter.makeLaunchStrategies(
+            profile: .init(
+                executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+                commandStyle: .start,
+                supportsNewTab: true
+            ),
+            mode: .newWindow,
+            cwd: URL(fileURLWithPath: "/tmp", isDirectory: true)
+        )
         XCTAssertEqual(
             args,
             [
                 ["start", "--cwd", "/tmp"],
-                ["start", "--always-new-process", "--cwd", "/tmp"],
-                ["cli", "spawn", "--new-window", "--cwd", "/tmp"],
             ]
         )
     }
 
-    func test_kakuLaunchStrategies_newTab() {
-        let args = KakuAdapter.makeLaunchStrategies(mode: .newTab, cwd: URL(fileURLWithPath: "/tmp/project", isDirectory: true))
+    func test_kakuLaunchStrategies_newTab_forGUIStartCommand() {
+        let args = KakuAdapter.makeLaunchStrategies(
+            profile: .init(
+                executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+                commandStyle: .start,
+                supportsNewTab: true
+            ),
+            mode: .newTab,
+            cwd: URL(fileURLWithPath: "/tmp/project", isDirectory: true)
+        )
         XCTAssertEqual(
             args,
             [
-                ["cli", "spawn", "--cwd", "/tmp/project"],
                 ["start", "--new-tab", "--cwd", "/tmp/project"],
                 ["start", "--cwd", "/tmp/project"],
             ]
+        )
+    }
+
+    func test_kakuLaunchStrategies_newWindow_forLegacyCliSpawnCommand() {
+        let args = KakuAdapter.makeLaunchStrategies(
+            profile: .init(
+                executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku",
+                commandStyle: .cliSpawn,
+                supportsNewTab: true
+            ),
+            mode: .newWindow,
+            cwd: URL(fileURLWithPath: "/tmp/legacy", isDirectory: true)
+        )
+        XCTAssertEqual(
+            args,
+            [
+                ["cli", "spawn", "--new-window", "--cwd", "/tmp/legacy"],
+                ["cli", "spawn", "--cwd", "/tmp/legacy"],
+            ]
+        )
+    }
+
+    func test_kakuExecutableProfile_prefersGUIStartWhenHelpAdvertisesIt() {
+        let help = """
+        Usage: kaku-gui [OPTIONS] [COMMAND]
+
+        Commands:
+          start  Start the GUI, optionally running an alternative program [aliases: -e]
+          help   Print help
+        """
+        let startHelp = """
+        Usage: kaku-gui start [OPTIONS] [PROG]...
+
+        Options:
+              --always-new-process
+              --new-tab
+              --cwd <CWD>
+        """
+
+        let profile = KakuAdapter.detectExecutableProfile(
+            executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+            helpOutput: help,
+            startHelpOutput: startHelp
+        )
+
+        XCTAssertEqual(
+            profile,
+            .init(
+                executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+                commandStyle: .start,
+                supportsNewTab: true
+            )
+        )
+    }
+
+    func test_kakuExecutableProfile_supportsLegacyCliSpawnOnlyWhenAdvertised() {
+        let help = """
+        Usage: kaku [OPTIONS] [COMMAND]
+
+        Commands:
+          cli     Manage CLI helpers
+          help    Print help
+        """
+        let cliHelp = """
+        Usage: kaku cli [OPTIONS] <COMMAND>
+
+        Commands:
+          spawn   Spawn a command into a new window or tab
+          help    Print help
+        """
+
+        let profile = KakuAdapter.detectExecutableProfile(
+            executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku",
+            helpOutput: help,
+            startHelpOutput: nil,
+            cliHelpOutput: cliHelp
+        )
+
+        XCTAssertEqual(
+            profile,
+            .init(
+                executablePath: "/Applications/Kaku.app/Contents/MacOS/kaku",
+                commandStyle: .cliSpawn,
+                supportsNewTab: false
+            )
         )
     }
 
@@ -34,8 +132,8 @@ final class TerminalAdapterRegistryTests: XCTestCase {
         XCTAssertEqual(
             KakuAdapter.makeExecutableCandidates(forAppURL: appURL),
             [
-                "/Applications/Kaku.app/Contents/MacOS/kaku",
                 "/Applications/Kaku.app/Contents/MacOS/kaku-gui",
+                "/Applications/Kaku.app/Contents/MacOS/kaku",
             ]
         )
     }

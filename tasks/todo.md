@@ -1,5 +1,20 @@
 # Todo
 
+## 当前任务（2026-03-20，发布 Kaku 修复版）
+- [x] 回顾 `tasks/lessons.md`、当前工作区变更与发布脚本，确认本次发布约束。
+- [x] 确认版本号、签名证书、公证配置、GitHub/tap 发布凭据是否齐备。
+- [x] 构建 `0.2.5` 最新安装包并验证 ad-hoc 产物完整性。
+- [ ] 提交当前代码、创建发布 tag，并同步源码远端。
+- [ ] 完成 Developer ID 签名/公证、GitHub Release 资产上传与 Homebrew tap 同步。
+- [x] 在回顾区记录本次发布结果、阻塞项与后续动作。
+
+## 当前任务（2026-03-20，分析并修复 Kaku Finder 快开体验问题）
+- [x] 回顾 `tasks/lessons.md` 与现有 Go2Shell 对标设计，确认本次问题的约束与历史决策。
+- [x] 梳理 Finder 工具栏 -> `PathBridgeLauncher` -> `KakuAdapter` 调用链，定位 Dock 多图标与窗口未前置的根因。
+- [x] 输出修复方案：收敛 Kaku 启动策略，避免重复进程/重复 Dock 图标，并补齐前台激活。
+- [x] 如用户确认，实施代码修改并补充回归测试。
+- [x] 运行构建/测试验证并在回顾区记录结果。
+
 ## 当前任务（2026-03-02，发布自动添加修复版 DMG 并同步 Homebrew）
 - [x] 版本升级到 `0.2.4`（包含 Go2Shell 自动添加 Finder 入口修复）。
 - [x] 回归验证：`PathBridgeApp` 全测试通过。
@@ -189,6 +204,8 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：生成 `0.2.5` 发布候选包。版本号已提升到 `0.2.5`（`CFBundleVersion=7`），`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-0.2.5 -only-testing:PathBridgeTerminalAdaptersTests` 通过；`ALLOW_UNSIGNED_ARCHIVE=1 scripts/release/make_dmg.sh` 产出 `build/release/dmg/PathBridge_v0.2.5.dmg`，SHA256 为 `e16e04555c0faadf6bd3da891e2bc8a9f8c7bf1a6c50e88423748eb97b31d9ae`；`codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app` 通过。当前阻塞：本机 `security find-identity -v -p codesigning` 显示 `0 valid identities found`，且 `gh auth status` 的 token 已失效，因此本次只能产出 ad-hoc 包与源码 tag，尚不能完成 Developer ID 签名/公证、GitHub Release 资产上传和 Homebrew tap 同步。
+- 已完成：Kaku Finder 快开体验修复。`KakuAdapter` 改为优先探测并使用 `kaku-gui start --cwd`，旧版 `kaku cli spawn` 退为兼容路径，默认不再走 `--always-new-process`；启动成功后会显式激活 Kaku 窗口。回归验证：`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData -only-testing:PathBridgeTerminalAdaptersTests` 通过；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData` 通过。剩余人工项：需在 Finder 工具栏里实机点一次 Kaku，确认 Tahoe 上窗口确实前置、Dock 不再累积多实例图标。
 - 已完成：发布 `v0.2.4`（Go2Shell 自动添加 Finder 入口修复）。GitHub Release：`https://github.com/lzy0809/PathBridge/releases/tag/v0.2.4`；DMG：`build/release/dmg/PathBridge_v0.2.4.dmg`；SHA256：`8afe226b2e04e8db1f5af3df044067e7ed5da67cde8a50da378d5659bdc0120d`；Homebrew tap 提交：`c9d6f86`。
 - 已完成：按用户指令切回 `build/design/reference` 图标基线，并通过脚本生成 App/Launcher 全尺寸资源；两端图标逐项比对一致。
 - 已完成：图标按确认的 M2 方向重绘并正式应用到 App/Launcher（保留系统感外框、内卡片更干净、`^_^` 中对比），两端全尺寸资源已同步。
