@@ -7,6 +7,19 @@ struct KakuLaunchProfile: Equatable {
     let executablePath: String
     let commandStyle: KakuCommandStyle
     let supportsNewTab: Bool
+    let supportsPosition: Bool
+
+    init(
+        executablePath: String,
+        commandStyle: KakuCommandStyle,
+        supportsNewTab: Bool,
+        supportsPosition: Bool = false
+    ) {
+        self.executablePath = executablePath
+        self.commandStyle = commandStyle
+        self.supportsNewTab = supportsNewTab
+        self.supportsPosition = supportsPosition
+    }
 }
 
 enum KakuCommandStyle: Equatable {
@@ -33,8 +46,15 @@ public struct KakuAdapter: TerminalAdapter {
     }
 
     public func open(paths: [URL], mode: OpenMode, command: String?) throws {
-        guard let launchProfiles = resolveLaunchProfiles() else {
-            throw AdapterLaunchError.processStartFailed("Kaku executable not found")
+        var launchProfiles: [KakuLaunchProfile]?
+        var didResolveLaunchProfiles = false
+        func fallbackLaunchProfiles() -> [KakuLaunchProfile]? {
+            guard !didResolveLaunchProfiles else {
+                return launchProfiles
+            }
+            launchProfiles = resolveLaunchProfiles()
+            didResolveLaunchProfiles = true
+            return launchProfiles
         }
 
         var didLaunch = false
@@ -46,30 +66,59 @@ public struct KakuAdapter: TerminalAdapter {
             let previousFrame = mode == .newWindow
                 ? bundleIdentifier.flatMap { WindowAccessibilityController.focusedWindowFrame(bundleIdentifier: $0) }
                 : nil
+            let targetFrame = previousFrame.map { WindowOffsetStrategy.offset(frame: $0) }
 
-            for profile in Self.prioritizeLaunchProfiles(launchProfiles, prefersExistingInstance: prefersExistingInstance) {
-                let strategies = Self.makeLaunchStrategies(profile: profile, mode: mode, cwd: path)
-                for arguments in strategies {
-                    attempt += 1
-                    Self.logger.info(
-                        "kaku attempt=\(attempt) exec=\(profile.executablePath, privacy: .public) style=\(String(describing: profile.commandStyle), privacy: .public) path=\(path.path, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public)"
-                    )
-                    do {
-                        try runKaku(executablePath: profile.executablePath, arguments: arguments)
-                        Self.logger.info("kaku launched via exec=\(profile.executablePath, privacy: .public)")
-                        launched = true
-                        didLaunch = true
-                        break
-                    } catch {
-                        lastError = error
-                        Self.logger.error(
-                            "kaku attempt failed exec=\(profile.executablePath, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public) error=\(error.localizedDescription, privacy: .public)"
-                        )
-                    }
+            if let serviceName = Self.serviceName(for: mode),
+               openViaService(name: serviceName, path: path)
+            {
+                Self.logger.info("kaku launched via service=\(serviceName, privacy: .public) path=\(path.path, privacy: .public)")
+                launched = true
+                didLaunch = true
+            }
+
+            if !launched {
+                guard let launchProfiles = fallbackLaunchProfiles() else {
+                    throw lastError ?? AdapterLaunchError.processStartFailed("Kaku service unavailable and executable profile not found")
                 }
 
-                if launched {
-                    break
+                for profile in Self.prioritizeLaunchProfiles(launchProfiles, prefersExistingInstance: prefersExistingInstance) {
+                    let strategies = Self.makeLaunchStrategies(
+                        profile: profile,
+                        mode: mode,
+                        cwd: path,
+                        targetPosition: targetFrame?.origin
+                    )
+                    for arguments in strategies {
+                        attempt += 1
+                        Self.logger.info(
+                            "kaku attempt=\(attempt) exec=\(profile.executablePath, privacy: .public) style=\(String(describing: profile.commandStyle), privacy: .public) path=\(path.path, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public)"
+                        )
+                        do {
+                            let allowLongRunningProcess = !(prefersExistingInstance && profile.commandStyle == .start)
+                            try runKaku(
+                                executablePath: profile.executablePath,
+                                arguments: arguments,
+                                allowLongRunningProcess: allowLongRunningProcess
+                            )
+                            Self.logger.info("kaku launched via exec=\(profile.executablePath, privacy: .public)")
+                            launched = true
+                            didLaunch = true
+                            break
+                        } catch {
+                            lastError = error
+                            Self.logger.error(
+                                "kaku attempt failed exec=\(profile.executablePath, privacy: .public) args=\(arguments.joined(separator: " "), privacy: .public) error=\(error.localizedDescription, privacy: .public)"
+                            )
+                        }
+
+                        if launched {
+                            break
+                        }
+                    }
+
+                    if launched {
+                        break
+                    }
                 }
             }
 
@@ -78,12 +127,12 @@ public struct KakuAdapter: TerminalAdapter {
             }
 
             prefersExistingInstance = true
+            activateKaku()
 
             if mode == .newWindow,
                let bundleIdentifier,
-               let previousFrame
+               let targetFrame
             {
-                let targetFrame = WindowOffsetStrategy.offset(frame: previousFrame)
                 _ = WindowAccessibilityController.moveFocusedWindow(
                     bundleIdentifier: bundleIdentifier,
                     to: targetFrame,
@@ -97,6 +146,17 @@ public struct KakuAdapter: TerminalAdapter {
         }
     }
 
+    static func serviceName(for mode: OpenMode) -> String? {
+        switch mode {
+        case .newWindow:
+            return "New Kaku Window Here"
+        case .newTab:
+            return "New Kaku Tab Here"
+        case .reuseCurrent:
+            return nil
+        }
+    }
+
     static func prioritizeLaunchProfiles(
         _ profiles: [KakuLaunchProfile],
         prefersExistingInstance: Bool
@@ -107,8 +167,25 @@ public struct KakuAdapter: TerminalAdapter {
         }
     }
 
-    static func makeLaunchStrategies(profile: KakuLaunchProfile, mode: OpenMode, cwd: URL) -> [[String]] {
+    static func makeLaunchStrategies(
+        profile: KakuLaunchProfile,
+        mode: OpenMode,
+        cwd: URL,
+        targetPosition: CGPoint? = nil
+    ) -> [[String]] {
         let cwdArguments = ["--cwd", cwd.path]
+        let positionArguments: [String] = {
+            guard
+                mode == .newWindow,
+                profile.commandStyle == .start,
+                profile.supportsPosition,
+                let targetPosition
+            else {
+                return []
+            }
+            return ["--position", "\(Int(targetPosition.x)),\(Int(targetPosition.y))"]
+        }()
+
         switch profile.commandStyle {
         case .start:
             switch mode {
@@ -124,7 +201,7 @@ public struct KakuAdapter: TerminalAdapter {
                 ]
             case .newWindow, .reuseCurrent:
                 return [
-                    ["start"] + cwdArguments,
+                    ["start"] + positionArguments + cwdArguments,
                 ]
             }
         case .cliSpawn:
@@ -172,10 +249,12 @@ public struct KakuAdapter: TerminalAdapter {
             || URL(fileURLWithPath: executablePath).lastPathComponent == "kaku-gui"
         {
             let supportsNewTab = normalizedStartHelp?.contains("--new-tab") == true
+            let supportsPosition = normalizedStartHelp?.contains("--position") == true
             return KakuLaunchProfile(
                 executablePath: executablePath,
                 commandStyle: .start,
-                supportsNewTab: supportsNewTab
+                supportsNewTab: supportsNewTab,
+                supportsPosition: supportsPosition
             )
         }
 
@@ -183,7 +262,8 @@ public struct KakuAdapter: TerminalAdapter {
             return KakuLaunchProfile(
                 executablePath: executablePath,
                 commandStyle: .cliSpawn,
-                supportsNewTab: false
+                supportsNewTab: false,
+                supportsPosition: false
             )
         }
 
@@ -232,7 +312,7 @@ public struct KakuAdapter: TerminalAdapter {
             ) {
                 profiles.append(profile)
                 Self.logger.info(
-                    "kaku profile detected exec=\(path, privacy: .public) style=\(String(describing: profile.commandStyle), privacy: .public) supportsNewTab=\(profile.supportsNewTab, privacy: .public)"
+                    "kaku profile detected exec=\(path, privacy: .public) style=\(String(describing: profile.commandStyle), privacy: .public) supportsNewTab=\(profile.supportsNewTab, privacy: .public) supportsPosition=\(profile.supportsPosition, privacy: .public)"
                 )
             } else {
                 Self.logger.error("kaku profile detection failed exec=\(path, privacy: .public)")
@@ -241,7 +321,11 @@ public struct KakuAdapter: TerminalAdapter {
         return profiles.isEmpty ? nil : profiles
     }
 
-    private func runKaku(executablePath: String, arguments: [String]) throws {
+    private func runKaku(
+        executablePath: String,
+        arguments: [String],
+        allowLongRunningProcess: Bool
+    ) throws {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executablePath)
         process.arguments = arguments
@@ -258,12 +342,17 @@ public struct KakuAdapter: TerminalAdapter {
             throw AdapterLaunchError.processStartFailed(error.localizedDescription)
         }
 
-        let waitDeadline = Date().addingTimeInterval(0.35)
+        let waitDeadline = Date().addingTimeInterval(allowLongRunningProcess ? 0.35 : 1.2)
         while process.isRunning, Date() < waitDeadline {
             RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.02))
         }
 
         if process.isRunning {
+            guard allowLongRunningProcess else {
+                process.terminate()
+                Self.logger.error("kaku command kept running while existing instance was expected, terminated to avoid duplicate GUI")
+                throw AdapterLaunchError.processStartFailed("Kaku did not hand off to the existing instance")
+            }
             Self.logger.info("kaku command still running, treat as launched")
             return
         }
@@ -319,6 +408,23 @@ public struct KakuAdapter: TerminalAdapter {
         }
 
         return combinedOutput
+    }
+
+    private func openViaService(name: String, path: URL) -> Bool {
+        NSUpdateDynamicServices()
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("com.liangzhiyuan.pathbridge.kaku.\(UUID().uuidString)")
+        )
+        let fileNamesType = NSPasteboard.PasteboardType("NSFilenamesPboardType")
+        pasteboard.clearContents()
+        pasteboard.declareTypes([fileNamesType, .fileURL, .string], owner: nil)
+        pasteboard.setPropertyList([path.path], forType: fileNamesType)
+        pasteboard.setString(path.absoluteString, forType: .fileURL)
+        pasteboard.setString(path.path, forType: .string)
+
+        let performed = NSPerformService(name, pasteboard)
+        Self.logger.info("kaku service performed=\(performed, privacy: .public) name=\(name, privacy: .public)")
+        return performed
     }
 
     private func activateKaku() {

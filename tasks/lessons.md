@@ -1,5 +1,10 @@
 # Lessons Learned
 
+- 日期：2026-06-10
+  - 用户纠正：`v0.2.6` 仍会在 Finder 工具栏打开 Kaku / Ghostty 时出现多个 Dock 实例，说明之前“测试通过 + 能打开窗口”的验证粒度不够。
+  - 暴露问题：把“新窗口”误等价为通用 `/usr/bin/open -n`，会直接制造新的 macOS 应用实例；同时 Kaku 当前版本没有旧的 `cli spawn`，只验证参数生成无法覆盖真实版本能力。
+  - 预防规则：终端单实例类修复必须做三层验证：源码/单测确认不走 `open -n`，终端当前版本能力探测（AppleScript/Service/CLI help），以及 Finder/Launcher 风格实机进程数前后对比；未完成进程数验证前不得宣称 Dock 单实例问题已修复。
+
 - 日期：2026-03-20
   - 实施纠正：在 Tuist 工程里新增 `Sources/**` / `Tests/**` 下的新文件后，现有 `PathBridge.xcodeproj` 不会自动感知，直接 `xcodebuild` 会出现“符号不存在/文件不在 target 中”的假象。
   - 暴露问题：这次新增 `WindowOffsetStrategy.swift`、`WindowAccessibilityController.swift` 后，先跑测试得到 `Cannot find 'WindowOffsetStrategy' in scope`，根因不是代码没生效，而是忘了重新 `tuist generate`。
