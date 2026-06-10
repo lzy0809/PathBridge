@@ -4,11 +4,11 @@
 - [x] 整合远端 README 提交，确保本地修复基于最新 `origin/master`。
 - [x] 重新生成正式命名 DMG：`PathBridge_v0.2.7.dmg`。
 - [x] 复验正式 DMG 的签名、公证、主 App/Launcher entitlements 与 SHA256。
-- [ ] 提交当前修复与发布记录，创建并推送 `v0.2.7` tag。
-- [ ] 创建/更新 GitHub Release 资产。
-- [ ] 更新并推送 Homebrew tap cask，验证 `brew install --cask lzy0809/tap/pathbridge` 可用路径。
+- [x] 提交当前修复与发布记录，创建并推送 `v0.2.7` tag。
+- [x] 创建/更新 GitHub Release 资产。
+- [x] 更新并推送 Homebrew tap cask，验证 `brew install --cask lzy0809/tap/pathbridge` 可用路径。
 
-发布证据（进行中）：正式 DMG `build/release/dmg/PathBridge_v0.2.7.dmg`；SHA256 `7e8a6eb024aebaf9c0ecd9fdc55c797235f61de883e7ad4bac5da57cdc1b96cd`；Apple notarization submission `a5205a65-bc7d-48ce-a703-801eb0be4450`，状态 `Accepted`；挂载 DMG 后确认主 App 与内嵌 Launcher 均包含 `com.apple.security.automation.apple-events=true`；`spctl` 返回 `source=Notarized Developer ID`；`hdiutil verify` checksum valid；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-release-v027 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过 19/19。
+发布证据：正式 DMG `build/release/dmg/PathBridge_v0.2.7.dmg`；SHA256 `7e8a6eb024aebaf9c0ecd9fdc55c797235f61de883e7ad4bac5da57cdc1b96cd`；Apple notarization submission `a5205a65-bc7d-48ce-a703-801eb0be4450`，状态 `Accepted`；挂载 DMG 后确认主 App 与内嵌 Launcher 均包含 `com.apple.security.automation.apple-events=true`；`spctl` 返回 `source=Notarized Developer ID`；`hdiutil verify` checksum valid；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-release-v027 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过 19/19；GitHub Release：`https://github.com/lzy0809/PathBridge/releases/tag/v0.2.7`；发布 tag：`v0.2.7 -> f325080f735399485c4d6eddacdbcbef1d05f342`；Homebrew tap 提交：`daf971d`；`brew fetch --cask --force lzy0809/tap/pathbridge` 成功；`brew upgrade --cask --dry-run lzy0809/tap/pathbridge` 显示 `0.2.6 -> 0.2.7`。
 
 ## 当前任务（2026-06-10，修复本地测试包终端打不开）
 - [x] 复现已安装包点击链路，确认 Finder 工具栏确实启动 `/Applications/PathBridgeApp.app/Contents/MacOS/PathBridgeLauncher.app`。
