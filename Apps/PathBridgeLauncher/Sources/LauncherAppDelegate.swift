@@ -37,6 +37,10 @@ final class LauncherAppDelegate: NSObject, NSApplicationDelegate {
     private func handleFallbackLaunch() {
         guard let directory = resolveFinderFrontDirectory() else {
             logger.error("No Finder front directory resolved for launcher")
+            UserToastNotifier.show(
+                title: "PathBridge 需要自动化权限",
+                body: "请在系统设置 > 隐私与安全性 > 自动化 中允许 PathBridge 控制 Finder"
+            )
             terminateSoon()
             return
         }
@@ -76,7 +80,7 @@ final class LauncherAppDelegate: NSObject, NSApplicationDelegate {
             logger.info("launcher success requestID=\(requestID, privacy: .public) adapter=\(adapter.id, privacy: .public)")
         } catch {
             logger.error("launcher failed requestID=\(requestID, privacy: .public) adapter=\(adapter.id, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
-            UserToastNotifier.showUnsupportedTerminal(adapter.displayName, detail: "当前路径或打开方式暂不支持")
+            UserToastNotifier.showUnsupportedTerminal(adapter.displayName, detail: userFacingLaunchFailureDetail(error))
         }
 
         terminateSoon()
@@ -85,12 +89,14 @@ final class LauncherAppDelegate: NSObject, NSApplicationDelegate {
     private func resolveFinderFrontDirectory() -> URL? {
         var errorInfo: NSDictionary?
         let script = NSAppleScript(source: """
+        with timeout of 20 seconds
         tell application "Finder"
             if (count of Finder windows) is 0 then
                 return POSIX path of (desktop as alias)
             end if
             return POSIX path of (target of front Finder window as alias)
         end tell
+        end timeout
         """)
 
         guard let descriptor = script?.executeAndReturnError(&errorInfo) else {
@@ -111,5 +117,20 @@ final class LauncherAppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             NSApp.terminate(nil)
         }
+    }
+
+    private func userFacingLaunchFailureDetail(_ error: Error) -> String {
+        let message = error.localizedDescription
+        let lowercasedMessage = message.lowercased()
+
+        if lowercasedMessage.contains("not authorized") || lowercasedMessage.contains("not authorised") {
+            return "自动化权限未授权，请在系统设置 > 隐私与安全性 > 自动化 中允许 PathBridge 控制该终端"
+        }
+
+        if lowercasedMessage.contains("timed out") || message.contains("超时") {
+            return "等待终端自动化响应超时，请确认已允许 PathBridge 控制该终端"
+        }
+
+        return "当前路径或打开方式暂不支持"
     }
 }

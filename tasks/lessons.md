@@ -1,6 +1,11 @@
 # Lessons Learned
 
 - 日期：2026-06-10
+  - 用户纠正：本地 DMG 安装后点击 Finder 工具栏无法打开 Ghostty/iTerm2，不能只凭单测、构建、签名和公证就宣称“完全通过测试”。
+  - 暴露问题：发布脚本使用 `codesign --force --deep` 重签最终 App，未显式传入 entitlements，导致 App/Launcher 源码中配置的 Apple Events 权限在最终安装包中被剥离；验证只看了 `codesign --verify`，没有读取最终 `.app` 的 entitlements。
+  - 预防规则：凡是涉及 Apple Events / Accessibility / Finder 自动化的发布包，必须验证 DMG 解包或安装后的最终产物：`codesign -d --entitlements :- <App.app>` 和内嵌 helper 均包含关键 entitlement，并做一次真实 Finder/Launcher 点击链路验证；若 TCC 权限被重置或首次安装，必须明确标注“等待用户授权”为人工验证项，不能宣称无人值守点击已完全通过。
+
+- 日期：2026-06-10
   - 用户纠正：`v0.2.6` 仍会在 Finder 工具栏打开 Kaku / Ghostty 时出现多个 Dock 实例，说明之前“测试通过 + 能打开窗口”的验证粒度不够。
   - 暴露问题：把“新窗口”误等价为通用 `/usr/bin/open -n`，会直接制造新的 macOS 应用实例；同时 Kaku 当前版本没有旧的 `cli spawn`，只验证参数生成无法覆盖真实版本能力。
   - 预防规则：终端单实例类修复必须做三层验证：源码/单测确认不走 `open -n`，终端当前版本能力探测（AppleScript/Service/CLI help），以及 Finder/Launcher 风格实机进程数前后对比；未完成进程数验证前不得宣称 Dock 单实例问题已修复。

@@ -15,6 +15,7 @@ final class TerminalAdapterRegistryTests: XCTestCase {
         XCTAssertTrue(script.contains("initial working directory:\"/tmp/project\""))
         XCTAssertTrue(script.contains("new window with configuration"))
         XCTAssertTrue(script.contains("activate"))
+        XCTAssertTrue(script.contains("with timeout of"))
         XCTAssertFalse(script.contains("/usr/bin/open"))
         XCTAssertFalse(script.contains(" -n "))
     }
@@ -51,6 +52,7 @@ final class TerminalAdapterRegistryTests: XCTestCase {
         XCTAssertTrue(script.contains("cd '/tmp/project'"))
         XCTAssertTrue(script.contains("set bounds of newWindow to {128, 148, 1028, 768}"))
         XCTAssertTrue(script.contains("activate"))
+        XCTAssertTrue(script.contains("with timeout of"))
     }
 
     func test_iTerm2AppleScript_newTab_usesCurrentWindow() {

@@ -1,5 +1,28 @@
 # Todo
 
+## 当前任务（2026-06-10，正式发布 v0.2.7 并同步 Homebrew）
+- [x] 整合远端 README 提交，确保本地修复基于最新 `origin/master`。
+- [x] 重新生成正式命名 DMG：`PathBridge_v0.2.7.dmg`。
+- [x] 复验正式 DMG 的签名、公证、主 App/Launcher entitlements 与 SHA256。
+- [ ] 提交当前修复与发布记录，创建并推送 `v0.2.7` tag。
+- [ ] 创建/更新 GitHub Release 资产。
+- [ ] 更新并推送 Homebrew tap cask，验证 `brew install --cask lzy0809/tap/pathbridge` 可用路径。
+
+发布证据（进行中）：正式 DMG `build/release/dmg/PathBridge_v0.2.7.dmg`；SHA256 `7e8a6eb024aebaf9c0ecd9fdc55c797235f61de883e7ad4bac5da57cdc1b96cd`；Apple notarization submission `a5205a65-bc7d-48ce-a703-801eb0be4450`，状态 `Accepted`；挂载 DMG 后确认主 App 与内嵌 Launcher 均包含 `com.apple.security.automation.apple-events=true`；`spctl` 返回 `source=Notarized Developer ID`；`hdiutil verify` checksum valid；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-release-v027 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过 19/19。
+
+## 当前任务（2026-06-10，修复本地测试包终端打不开）
+- [x] 复现已安装包点击链路，确认 Finder 工具栏确实启动 `/Applications/PathBridgeApp.app/Contents/MacOS/PathBridgeLauncher.app`。
+- [x] 抓取实时系统日志，定位失败点为 Ghostty Apple Events 自动化授权被拒绝。
+- [x] 核对最终安装包签名产物，确认 App/Launcher entitlements 被发布脚本重签名剥离。
+- [x] 修复 `make_dmg.sh` 签名流程，保留 App 与内嵌 Launcher 的 Apple Events entitlement。
+- [x] 为 iTerm2/Ghostty/Finder 自动化脚本增加超时与用户可理解的权限失败提示。
+- [x] 重新生成仅本地测试 DMG，不打 tag、不推送远端。
+- [x] 验证新 DMG 中 App/Launcher entitlements、签名、公证与 SHA256。
+- [x] 将本地测试包安装到 `/Applications`，刷新 Finder 工具栏 Launcher 引用。
+- [ ] 用户首次点击时授权 Finder 与目标终端自动化权限后，实机确认 Finder 工具栏能打开 Ghostty/iTerm2。
+
+回顾：本地测试包为 `build/release/dmg/PathBridge_v0.2.7-localtest.dmg`，SHA256 `7f36c27b51b24533fed29fa4a3a0306034f4215ff649592b3fa8296829714245`；已验证 DMG 中主 App 与内嵌 Launcher 均包含 `com.apple.security.automation.apple-events=true`，`spctl` 显示 `source=Notarized Developer ID`。按用户要求，本轮未打 tag、未推送远端。
+
 ## 当前任务（2026-06-10，生成 v0.2.7 本地测试包）
 - [x] 升级版本号到 `0.2.7(9)` 并重新生成工程。
 - [x] 复核本次修复验证结果，提交代码并创建 `v0.2.7` tag。

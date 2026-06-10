@@ -15,6 +15,7 @@ public struct ITerm2Adapter: TerminalAdapter {
         "iTerm",
     ]
     private static let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge.adapters", category: "iterm2-adapter")
+    private static let appleScriptTimeoutSeconds = 20
 
     public init() {}
 
@@ -49,7 +50,7 @@ public struct ITerm2Adapter: TerminalAdapter {
 
         switch mode {
         case .newWindow:
-            return """
+            return withTimeout("""
             tell application id "com.googlecode.iterm2"
                 activate
                 set newWindow to (create window with default profile)
@@ -57,9 +58,9 @@ public struct ITerm2Adapter: TerminalAdapter {
                     write text "\(command)"
                 end tell
             \(boundsLine)end tell
-            """
+            """)
         case .newTab:
-            return """
+            return withTimeout("""
             tell application id "com.googlecode.iterm2"
                 activate
                 if (count of windows) is 0 then
@@ -76,9 +77,9 @@ public struct ITerm2Adapter: TerminalAdapter {
                     end tell
                 end if
             end tell
-            """
+            """)
         case .reuseCurrent:
-            return """
+            return withTimeout("""
             tell application id "com.googlecode.iterm2"
                 activate
                 if (count of windows) is 0 then
@@ -92,7 +93,7 @@ public struct ITerm2Adapter: TerminalAdapter {
                     end tell
                 end if
             end tell
-            """
+            """)
         }
     }
 
@@ -102,8 +103,9 @@ public struct ITerm2Adapter: TerminalAdapter {
             throw AdapterLaunchError.processStartFailed("Failed to compile iTerm2 AppleScript")
         }
 
-        guard script.executeAndReturnError(&errorInfo).descriptorType != 0 || errorInfo == nil else {
-            let message = errorInfo?[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
+        _ = script.executeAndReturnError(&errorInfo)
+        if let errorInfo {
+            let message = errorInfo[NSAppleScript.errorMessage] as? String ?? "Unknown AppleScript error"
             logger.error("iterm2 applescript failed error=\(message, privacy: .public)")
             throw AdapterLaunchError.processStartFailed(message)
         }
@@ -126,5 +128,13 @@ public struct ITerm2Adapter: TerminalAdapter {
         value
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
+    private static func withTimeout(_ body: String) -> String {
+        """
+        with timeout of \(appleScriptTimeoutSeconds) seconds
+        \(body)
+        end timeout
+        """
     }
 }

@@ -25,10 +25,70 @@ ALLOW_UNSIGNED_ARCHIVE="${ALLOW_UNSIGNED_ARCHIVE:-0}"
 SKIP_ARCHIVE="${SKIP_ARCHIVE:-0}"
 SKIP_LAUNCHER_BUILD="${SKIP_LAUNCHER_BUILD:-0}"
 DMG_NAME_OVERRIDE="${DMG_NAME:-}"
+APP_ENTITLEMENTS="${APP_ENTITLEMENTS:-$ROOT_DIR/Apps/PathBridgeApp/PathBridgeApp.entitlements}"
+LAUNCHER_ENTITLEMENTS="${LAUNCHER_ENTITLEMENTS:-$ROOT_DIR/Apps/PathBridgeLauncher/PathBridgeLauncher.entitlements}"
 
 APP_PATH_IN_ARCHIVE="$ARCHIVE_PATH/Products/Applications/$APP_NAME"
 FINAL_APP_PATH="$EXPORT_APP_DIR/$APP_NAME"
 EMBEDDED_LAUNCHER_PATH="$FINAL_APP_PATH/Contents/MacOS/$LAUNCHER_APP_NAME"
+
+sign_code() {
+  local code_path="$1"
+  local entitlements_path="${2:-}"
+
+  local args=(codesign --force)
+  if [[ -n "$DEVELOPER_ID_APPLICATION" ]]; then
+    args+=(--options runtime --timestamp --sign "$DEVELOPER_ID_APPLICATION")
+  else
+    args+=(--timestamp=none --sign -)
+  fi
+
+  if [[ -n "$entitlements_path" ]]; then
+    if [[ ! -f "$entitlements_path" ]]; then
+      echo "[release][error] entitlements file missing: $entitlements_path" >&2
+      exit 1
+    fi
+    args+=(--entitlements "$entitlements_path")
+  fi
+
+  args+=("$code_path")
+  "${args[@]}"
+}
+
+sign_frameworks() {
+  local app_path="$1"
+  local frameworks_dir="$app_path/Contents/Frameworks"
+  if [[ ! -d "$frameworks_dir" ]]; then
+    return
+  fi
+
+  while IFS= read -r nested_code; do
+    echo "[release] codesign nested: $nested_code"
+    sign_code "$nested_code"
+  done < <(find "$frameworks_dir" -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) -print | sort)
+}
+
+verify_entitlement() {
+  local code_path="$1"
+  local entitlement_key="$2"
+  local temp_plist
+  temp_plist="$(mktemp)"
+
+  if ! codesign -d --entitlements :- "$code_path" >"$temp_plist" 2>/dev/null; then
+    rm -f "$temp_plist"
+    echo "[release][error] unable to read entitlements: $code_path" >&2
+    exit 1
+  fi
+
+  if ! /usr/libexec/PlistBuddy -c "Print :$entitlement_key" "$temp_plist" >/dev/null 2>&1; then
+    rm -f "$temp_plist"
+    echo "[release][error] missing entitlement '$entitlement_key': $code_path" >&2
+    exit 1
+  fi
+
+  rm -f "$temp_plist"
+  echo "[release] entitlement ok: $code_path -> $entitlement_key"
+}
 
 echo "[release] root: $ROOT_DIR"
 echo "[release] output: $OUTPUT_ROOT"
@@ -127,15 +187,23 @@ fi
 
 if [[ -n "$DEVELOPER_ID_APPLICATION" ]]; then
   echo "[release] codesign app with: $DEVELOPER_ID_APPLICATION"
-  codesign --force --deep --options runtime --timestamp --sign "$DEVELOPER_ID_APPLICATION" "$FINAL_APP_PATH"
 else
   echo "[release] DEVELOPER_ID_APPLICATION not set, ad-hoc re-sign app"
-  codesign --force --deep --timestamp=none --sign - "$FINAL_APP_PATH"
 fi
+
+sign_frameworks "$EMBEDDED_LAUNCHER_PATH"
+echo "[release] codesign embedded launcher with entitlements: $EMBEDDED_LAUNCHER_PATH"
+sign_code "$EMBEDDED_LAUNCHER_PATH" "$LAUNCHER_ENTITLEMENTS"
+
+sign_frameworks "$FINAL_APP_PATH"
+echo "[release] codesign app with entitlements: $FINAL_APP_PATH"
+sign_code "$FINAL_APP_PATH" "$APP_ENTITLEMENTS"
 
 if [[ "$ALLOW_UNSIGNED_ARCHIVE" != "1" ]]; then
   echo "[release] codesign verify app"
   codesign --verify --deep --strict --verbose=2 "$FINAL_APP_PATH"
+  verify_entitlement "$FINAL_APP_PATH" "com.apple.security.automation.apple-events"
+  verify_entitlement "$EMBEDDED_LAUNCHER_PATH" "com.apple.security.automation.apple-events"
 else
   echo "[release] unsigned archive mode, skip app codesign verify"
 fi

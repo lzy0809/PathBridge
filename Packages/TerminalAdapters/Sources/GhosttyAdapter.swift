@@ -14,6 +14,7 @@ public struct GhosttyAdapter: TerminalAdapter {
         "Ghostty",
     ]
     private static let logger = Logger(subsystem: "com.liangzhiyuan.pathbridge.adapters", category: "ghostty-adapter")
+    private static let appleScriptTimeoutSeconds = 20
 
     public init() {}
 
@@ -54,16 +55,16 @@ public struct GhosttyAdapter: TerminalAdapter {
 
         switch mode {
         case .newWindow:
-            return """
+            return withTimeout("""
             tell application id "com.mitchellh.ghostty"
                 activate
             \(configurationLine)
                 set newWindow to new window with configuration surfaceConfig
                 activate window newWindow
             end tell
-            """
+            """)
         case .newTab:
-            return """
+            return withTimeout("""
             tell application id "com.mitchellh.ghostty"
                 activate
             \(configurationLine)
@@ -75,9 +76,9 @@ public struct GhosttyAdapter: TerminalAdapter {
                     select tab createdTab
                 end if
             end tell
-            """
+            """)
         case .reuseCurrent:
-            return """
+            return withTimeout("""
             tell application id "com.mitchellh.ghostty"
                 activate
             \(configurationLine)
@@ -89,7 +90,7 @@ public struct GhosttyAdapter: TerminalAdapter {
                     input text "\(cdCommand)" & return to currentTerminal
                 end if
             end tell
-            """
+            """)
         }
     }
 
@@ -124,5 +125,13 @@ public struct GhosttyAdapter: TerminalAdapter {
         value
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+
+    private static func withTimeout(_ body: String) -> String {
+        """
+        with timeout of \(appleScriptTimeoutSeconds) seconds
+        \(body)
+        end timeout
+        """
     }
 }
