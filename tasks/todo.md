@@ -1,10 +1,10 @@
 # Todo
 
 ## 当前任务（2026-06-10，生成 v0.2.7 本地测试包）
-- [ ] 升级版本号到 `0.2.7(9)` 并重新生成工程。
-- [ ] 复核本次修复验证结果，提交代码并创建 `v0.2.7` tag。
-- [ ] 使用 Developer ID 签名与 `pathbridge-notary` 公证生成 DMG。
-- [ ] 验证 DMG 签名、公证与 SHA256，输出本地安装路径。
+- [x] 升级版本号到 `0.2.7(9)` 并重新生成工程。
+- [x] 复核本次修复验证结果，提交代码并创建 `v0.2.7` tag。
+- [x] 使用 Developer ID 签名与 `pathbridge-notary` 公证生成 DMG。
+- [x] 验证 DMG 签名、公证与 SHA256，输出本地安装路径。
 
 ## 当前任务（2026-06-10，终端单实例硬化修复）
 - [x] 写清设计与实施计划，明确 Ghostty / Kaku / iTerm2 的单实例边界与回归验证方式。
@@ -233,6 +233,7 @@
 - [ ] 进行 Finder 真机联调：启用扩展后验证“右键单击直开 + 工具栏 Quick Open”链路（需要人工点击验证）。
 
 ## 回顾
+- 已完成：生成本地测试包 `v0.2.7`。版本号已升到 `0.2.7(9)`；代码提交 `2dacf07`；tag `v0.2.7`；DMG 路径：`build/release/dmg/PathBridge_v0.2.7.dmg`；SHA256：`df117cd5f198fb7ee60b70d9f23377bcebe26016b94d739a035de67119356ac7`；Apple notarization submission：`03178f2d-6374-43d9-86fd-00b59470f59c`，状态 `Accepted`。验证：`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-v0.2.7-pretag` 通过；`codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app` 通过；`xcrun stapler validate build/release/dmg/PathBridge_v0.2.7.dmg` 通过；`spctl --assess --type open --context context:primary-signature -v build/release/dmg/PathBridge_v0.2.7.dmg` 返回 `source=Notarized Developer ID`；`hdiutil verify build/release/dmg/PathBridge_v0.2.7.dmg` 返回 checksum valid。
 - 已完成：终端单实例硬化修复。`GhosttyAdapter` 不再使用通用 `/usr/bin/open`，改为 Ghostty AppleScript `new surface configuration` + `new window/new tab/input text`，实测通过 `PathBridgeLauncher` 打开 `/tmp` 后 Ghostty 进程数保持 `1 -> 1`；`KakuAdapter` 新窗口/新标签优先走 macOS Service（`New Kaku Window Here` / `New Kaku Tab Here`），CLI 只作为兜底，并在已运行场景下拒绝长时间驻留的 `kaku-gui start`，实测 Service `0 -> 1 -> 1`、Launcher `1 -> 1`。验证：`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-single-instance-full-1` 通过（App 7、Shared 8、Core 2、TerminalAdapters 19，均 0 失败）；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData-single-instance-2` 通过；Ghostty `newTab` 进程数 `1 -> 1`、`newWindow` 进程数 `1 -> 1`。剩余人工项：发布安装后需在另一台机器上确认 Automation/Accessibility 权限弹窗和窗口偏移体感；iTerm2 本机未安装，当前只能由单测确认仍为 AppleScript 路径。
 - 已完成：正式发布 `v0.2.6`（终端单实例复用、窗口偏移与关窗退出修复）。发布代码 commit：`cb499e2`；tag：`v0.2.6`；GitHub Release：`https://github.com/lzy0809/PathBridge/releases/tag/v0.2.6`；正式 DMG：`build/release/dmg/PathBridge_v0.2.6.dmg`；SHA256：`7ef4ec89359f407d722b81cd27182a68b6253003d92f9d323777334d81ccc3a2`；Apple notarization submission：`acd2f845-0e9a-4169-99e6-3c5042b08400`，状态 `Accepted`；Homebrew tap 提交：`cb194d6`。验证：`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-terminal-fix-4 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-app-close-4 -only-testing:PathBridgeAppTests/ViewModelTests/test_appDelegate_terminatesAfterLastWindowClosed` 通过；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData-terminal-fix` 通过；`codesign --verify --deep --strict --verbose=2 build/release/app/PathBridgeApp.app`、`spctl --assess --type open --context context:primary-signature -v build/release/dmg/PathBridge_v0.2.6.dmg` 均通过。剩余人工项：在目标机器上授予辅助功能权限后，实机确认 Kaku 新窗偏移与单 Dock 实例体验是否符合预期。
 - 已完成：终端单实例复用、窗口偏移与关窗退出修复。`ITerm2Adapter` 不再走 `open -n`，改为 AppleScript 控制已有 iTerm2 实例创建新窗口/新标签，并在新窗口模式下基于上一个窗口位置做偏移；`KakuAdapter` 改为“运行中优先 `cli spawn`，未运行优先 `start`”，补充前置激活与基于辅助功能接口的窗口偏移；`AppDelegate` 增加 `applicationShouldTerminateAfterLastWindowClosed`，点红色关闭按钮后直接退出 PathBridge。验证：`tuist generate` 成功；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-terminal-fix-4 -only-testing:PathBridgeTerminalAdaptersTests/TerminalAdapterRegistryTests` 通过；`xcodebuild test -scheme PathBridgeApp -derivedDataPath /tmp/PathBridgeDerivedData-app-close-4 -only-testing:PathBridgeAppTests/ViewModelTests/test_appDelegate_terminatesAfterLastWindowClosed` 通过；`xcodebuild build -scheme PathBridgeLauncher -derivedDataPath /tmp/PathBridgeLauncherDerivedData-terminal-fix` 通过。剩余人工项：在目标机器上授予辅助功能权限后，实机确认 Kaku 新窗是否按偏移出现，以及 Dock 是否只保留单个实例图标。
